@@ -62,11 +62,21 @@ class _LoadingScreenState extends State<LoadingScreen> {
             ),
           ),
           const SizedBox(height: 20),
-          LinearProgressIndicator(
-            value: _progressValue,
-            minHeight: 5,
-            color: CustomColors.darkPurple,
-            backgroundColor: CustomColors.lightPurple,
+          const Text(
+            'Backstore',
+            style: TextStyle(
+              fontSize: 20,
+              color: CustomColors.black,
+            ),
+          ),
+          SizedBox(
+            width: 350,
+            child: LinearProgressIndicator(
+              value: _progressValue,
+              minHeight: 10,            
+              color: CustomColors.darkPurple,
+              backgroundColor: CustomColors.lightPurple,
+            ),
           ),
         ],
       ),
