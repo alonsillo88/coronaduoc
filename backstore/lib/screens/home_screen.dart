@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../utils/custom_colors.dart';
 import '../widgets/custom_drawer.dart';  // Importa el menú reutilizable
+import '../widgets/static_logo.dart';   // Importa el logo estático reutilizable
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -8,25 +9,37 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: CustomColors.lightGray,
       appBar: AppBar(
-        backgroundColor: CustomColors.lightGray,
-        title: const Text('CORONA', style: TextStyle(color: CustomColors.black)),
-        elevation: 0,
+        backgroundColor: CustomColors.background,  // Fondo blanco
+        elevation: 0,  // Sin sombra en el AppBar
         leading: Builder(
           builder: (BuildContext context) {
             return IconButton(
-              icon: const Icon(Icons.menu, color: CustomColors.black),
+              icon: const Icon(Icons.menu, color: CustomColors.black),  // Icono de menú negro
               onPressed: () {
-                Scaffold.of(context).openDrawer();
+                Scaffold.of(context).openDrawer();  // Abre el Drawer
               },
             );
           },
         ),
+        title: const Center(
+          child: StaticCoronaLogo(
+            size: 125,  // Ajustamos el tamaño del logo
+            color: CustomColors.black,  // Color negro del logo
+          ),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.account_circle, color: CustomColors.lightGray),  // Icono de perfil
+            onPressed: () {
+              // Acción al presionar el icono de perfil
+            },
+          ),
+        ],
       ),
-      drawer: const CustomDrawer(),  // Reutiliza el menú
+      drawer: const CustomDrawer(),  // Reutiliza el menú lateral
       body: Padding(
-        padding: const EdgeInsets.all(20.0),
+        padding: const EdgeInsets.all(20.0),  // Espaciado alrededor del contenido
         child: _buildBody(),
       ),
     );
@@ -34,16 +47,24 @@ class HomeScreen extends StatelessWidget {
 
   Widget _buildBody() {
     return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisAlignment: MainAxisAlignment.center,  // Centra los elementos verticalmente
+      crossAxisAlignment: CrossAxisAlignment.stretch,  // Hace que los botones ocupen todo el ancho
       children: [
-        _buildButton('SINCRONIZAR', () {}),
+        _buildButton('SINCRONIZAR', () {
+          // Acción para el botón "SINCRONIZAR"
+        }),
+        const SizedBox(height: 20),  // Espaciado entre botones
+        _buildButton('PICKING ASIGNADO', () {
+          // Acción para el botón "PICKING ASIGNADO"
+        }),
         const SizedBox(height: 20),
-        _buildButton('PICKING ASIGNADO', () {}),
+        _buildButton('CONSOLIDADO RECOLECCIÓN', () {
+          // Acción para el botón "CONSOLIDADO RECOLECCIÓN"
+        }),
         const SizedBox(height: 20),
-        _buildButton('CONSOLIDADO RECOLECCIÓN', () {}),
-        const SizedBox(height: 20),
-        _buildButton('CONSULTAR STOCK', () {}),
+        _buildButton('CONSULTAR STOCK', () {
+          // Acción para el botón "CONSULTAR STOCK"
+        }),
       ],
     );
   }
@@ -52,13 +73,16 @@ class HomeScreen extends StatelessWidget {
     return ElevatedButton(
       onPressed: onPressed,
       style: ElevatedButton.styleFrom(
-        backgroundColor: CustomColors.darkPurple,
-        padding: const EdgeInsets.symmetric(vertical: 20),
+        backgroundColor: CustomColors.purple,  // Botones de color morado
+        padding: const EdgeInsets.symmetric(vertical: 20),  // Tamaño del botón
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(30),
+          borderRadius: BorderRadius.circular(30),  // Bordes redondeados
         ),
       ),
-      child: Text(text, style: const TextStyle(color: CustomColors.white)),
+      child: Text(
+        text,
+        style: const TextStyle(color: CustomColors.white),  // Texto blanco
+      ),
     );
   }
 }

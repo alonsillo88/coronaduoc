@@ -1,3 +1,4 @@
+import 'package:backstore/widgets/static_logo.dart';
 import 'package:flutter/material.dart';
 import '../utils/custom_colors.dart';
 import '../screens/home_screen.dart';
@@ -6,10 +7,10 @@ class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
 
   @override
-  _LoginScreenState createState() => _LoginScreenState();
+  LoginScreenState createState() => LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> {
+class LoginScreenState extends State<LoginScreen> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
   bool _isButtonEnabled = false;
@@ -54,29 +55,37 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: CustomColors.lightGray,
+      backgroundColor: CustomColors.background,
       body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: _buildForm(),
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            const SizedBox(height: 20),
+            const StaticCoronaLogo(size: 80, color: CustomColors.black),
+            const SizedBox(height: 10),
+            const Text(
+              'BACKSTORE\nMÓVIL',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 18, // Tamaño de fuente ajustado
+                fontWeight: FontWeight.bold,
+                color: CustomColors.purple, // Color del texto en morado
+              ),
+            ),
+            const SizedBox(height: 80), // Espacio ajustado entre el logo y el formulario
+            _buildForm(),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildForm() {
     return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const Text(
-          'CORONA',
-          style: TextStyle(
-            fontSize: 40,
-            fontWeight: FontWeight.bold,
-            color: CustomColors.black,
-          ),
-          textAlign: TextAlign.center,
-        ),
-        const SizedBox(height: 10),
         TextField(
           controller: _emailController,
           decoration: const InputDecoration(
@@ -84,7 +93,7 @@ class _LoginScreenState extends State<LoginScreen> {
             hintText: 'usuario@dominio.cl',
             border: OutlineInputBorder(),
             focusedBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: CustomColors.darkPurple),
+              borderSide: BorderSide(color: CustomColors.purple), // Borde morado
             ),
           ),
         ),
@@ -96,11 +105,12 @@ class _LoginScreenState extends State<LoginScreen> {
             labelText: 'Contraseña',
             border: const OutlineInputBorder(),
             focusedBorder: const OutlineInputBorder(
-              borderSide: BorderSide(color: CustomColors.darkPurple),
+              borderSide: BorderSide(color: CustomColors.purple), // Borde morado
             ),
             suffixIcon: IconButton(
               icon: Icon(
                 _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                color: CustomColors.black, // Color negro para el icono
               ),
               onPressed: () {
                 setState(() {
@@ -110,19 +120,29 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 30), // Espacio entre el campo de contraseña y el botón
         ElevatedButton(
           onPressed: _isButtonEnabled ? _login : null,
           style: ElevatedButton.styleFrom(
-            backgroundColor: CustomColors.darkPurple,
+            backgroundColor: CustomColors.purple, // Color de fondo del botón morado
             padding: const EdgeInsets.symmetric(vertical: 15),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(30),
             ),
           ),
-          child: const Text('Ingresar', style: TextStyle(color: CustomColors.white)),
+          child: const Text(
+            'Ingresar',
+            style: TextStyle(color: CustomColors.white), // Texto blanco
+          ),
         ),
       ],
     );
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
   }
 }

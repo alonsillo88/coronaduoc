@@ -1,16 +1,18 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../utils/custom_colors.dart';
-import '../screens/login_screen.dart';
+import '../widgets/animated_logo.dart'; // Asegúrate de importar AnimatedCoronaLogo
 
 class LoadingScreen extends StatefulWidget {
-  const LoadingScreen({super.key});
+  const LoadingScreen({super.key, this.logoWidth = 300});
+
+  final double logoWidth;
 
   @override
-  _LoadingScreenState createState() => _LoadingScreenState();
+  LoadingScreenState createState() => LoadingScreenState();
 }
 
-class _LoadingScreenState extends State<LoadingScreen> {
+class LoadingScreenState extends State<LoadingScreen> {
   double _progressValue = 0.0;
   late Timer _timer;
 
@@ -20,15 +22,15 @@ class _LoadingScreenState extends State<LoadingScreen> {
     _startLoading();
   }
 
+  // Simulación de carga con una barra de progreso
   void _startLoading() {
     _timer = Timer.periodic(const Duration(milliseconds: 100), (Timer timer) {
       setState(() {
-        _progressValue += 0.05;
+        _progressValue += 0.03;
         if (_progressValue >= 1.0) {
           _timer.cancel();
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => const LoginScreen()),
-          );
+          // Una vez que la carga termine, navega al LoginScreen
+          Navigator.of(context).pushReplacementNamed('/login');
         }
       });
     });
@@ -43,42 +45,39 @@ class _LoadingScreenState extends State<LoadingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: CustomColors.lightGray,
-      body: _buildBody(),
-    );
-  }
-
-  Widget _buildBody() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Text(
-            'CORONA',
-            style: TextStyle(
-              fontSize: 40,
-              fontWeight: FontWeight.bold,
-              color: CustomColors.black,
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            AnimatedCoronaLogo(
+              size: widget.logoWidth, // Tamaño ajustable
+              color: CustomColors.black, // Color ajustable
             ),
-          ),
-          const SizedBox(height: 20),
-          const Text(
-            'Backstore',
-            style: TextStyle(
-              fontSize: 20,
-              color: CustomColors.black,
+            const SizedBox(
+                height: 10), // Espaciado entre el logo y la barra de progreso
+            const Text(
+              'Backstore',
+              style: TextStyle(
+                fontSize: 20,
+                color: CustomColors.black,
+              ),
             ),
-          ),
-          SizedBox(
-            width: 350,
-            child: LinearProgressIndicator(
-              value: _progressValue,
-              minHeight: 10,            
-              color: CustomColors.darkPurple,
-              backgroundColor: CustomColors.lightPurple,
+            // Barra de progreso
+            SizedBox(
+              width: MediaQuery.of(context).size.width * 0.7,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: LinearProgressIndicator(
+                  value: _progressValue,
+                  minHeight: 10,
+                  color: CustomColors.purple, // Barra de progreso morada
+                  backgroundColor:
+                      CustomColors.lightPurple, // Fondo de la barra
+                ),
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

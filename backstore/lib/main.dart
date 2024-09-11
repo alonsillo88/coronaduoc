@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'screens/loading_screen.dart';
+import 'screens/login_screen.dart';
 import 'utils/custom_colors.dart';
 
 void main() {
@@ -15,23 +16,31 @@ class BackstoreApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Backstore',
       theme: _buildTheme(),      
-      home: const LoadingScreen(),
+      home: const LoadingScreen(),  // Pantalla de inicio
+      routes: {
+        '/login': (context) => const LoginScreen(),  // Ruta para el LoginScreen
+      },
     );
   }
 
   ThemeData _buildTheme() {
     return ThemeData(
       colorScheme: ColorScheme.fromSeed(
-        seedColor: CustomColors.darkPurple,
+        seedColor: CustomColors.purple, // Color principal basado en "purple"
       ),
-      scaffoldBackgroundColor: CustomColors.white,
-      primaryColor: CustomColors.darkPurple,
+      scaffoldBackgroundColor: CustomColors.background,  // Fondo blanco
+      primaryColor: CustomColors.purple, // Color principal (morado)
       appBarTheme: const AppBarTheme(
-        backgroundColor: CustomColors.lightGray,
-        titleTextStyle: TextStyle(color: CustomColors.black, fontSize: 20),
-        iconTheme: IconThemeData(color: CustomColors.black),
+        backgroundColor: CustomColors.background,  // Color de fondo del AppBar
+        titleTextStyle: TextStyle(
+          color: CustomColors.black,  // Texto en negro
+          fontSize: 20,
+        ),
+        iconTheme: IconThemeData(
+          color: CustomColors.black,  // Iconos en negro
+        ),
       ),
-      useMaterial3: true,
+      useMaterial3: true,  // Usar el estilo Material 3
     );
   }
 }
