@@ -1,0 +1,166 @@
+# ------------------------------------------------------
+# THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
+# ------------------------------------------------------
+
+type Customer {
+  firstName: String!
+  lastName: String!
+  documentType: String!
+  document: String!
+  documentVerifyDigit: String!
+  email: String!
+  phone: String!
+}
+
+type Contact {
+  firstName: String
+  lastName: String
+  documentType: String
+  document: String
+  phone: String
+  email: String
+}
+
+type Address {
+  state: String!
+  community: String
+  city: String!
+  street: String!
+  number: String!
+  complement: String
+  postalCode: String
+  contact: Contact
+}
+
+type Destination {
+  facilityId: String
+  facilityName: String
+  address: Address!
+}
+
+type Item {
+  lineNumber: Float!
+  productId: Float!
+  status: String
+  statusDescription: String
+  categoryId: Float
+  categoryDescription: String
+  subCategoryId: Float
+  subCategoryDescription: String
+  classId: Float
+  classDescription: String
+  locationTypesId: Float
+  locationTypesDescription: String
+  sku: Float!
+  skuVerifyDigit: String!
+  externalSku: String!
+  skuName: String!
+  skuDescShort: String!
+  ean: Float
+  color: String
+  size: Float
+  quantity: Float!
+  shortQty: Float!
+  price: Float!
+  discount: Float!
+  couponWeb: String
+  currencyCode: String!
+  imageUrl: String
+  total: Float!
+  isGift: Boolean!
+}
+
+type History {
+  system: String!
+  creationDate: DateTime!
+  attributes: [HistoryAttribute!]!
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+type HistoryAttribute {
+  dataType: String!
+  field: String!
+  oldValue: String!
+  newValue: String!
+}
+
+type LogisticsInfo {
+  deliveryType: String!
+  deliveryOptions: String!
+  methodShippingCode: String!
+  methodShippingDescription: String
+  estimateShipping: String
+  estimateShippingDate: DateTime
+  priceShipping: Float!
+  locationAvailabilityDttm: String
+  pickupStartDttm: String
+  pickupEndDttm: String
+  designatedCurierCode: String
+  designatedCurierDescription: String
+  deliveryStartDttm: String
+  deliveryEndDttm: String
+  manifestNumber: String
+  trackingNumber: String
+  trackingUrl: String
+}
+
+type Origin {
+  facilityId: String!
+  facilityName: String!
+  address: Address!
+}
+
+type Payment {
+  code: String!
+  codeDescription: String!
+  codeNumber: Float!
+  documentNumber: String!
+  name: String!
+  installmentsNumber: Float!
+  installmentsValue: Float!
+  authId: String
+  value: Float!
+  type: String
+}
+
+type Order {
+  externalOrderId: String!
+  cancelReason: String
+  creationDate: DateTime!
+  customer: Customer!
+  destination: Destination!
+  discountValue: Float!
+  dte: [String!]
+  externalDate: DateTime!
+  externalSequenceNumber: String
+  history: [History!]!
+  items: [Item!]!
+  lastChangeDate: DateTime!
+  logisticsInfo: LogisticsInfo!
+  orderId: Float!
+  orderStatus: String!
+  orderStatusDescription: String!
+  origin: Origin!
+  payment: [Payment!]!
+  promotions: [String!]
+  shipValue: Float!
+  source: String!
+  subTotalValue: Float!
+  taxValue: Float!
+  totalValue: Float!
+}
+
+type Query {
+  getOrders: [Order!]!
+  getOrder(id: String!): Order!
+}
+
+type Mutation {
+  createOrder(item: String!, quantity: Float!): Order!
+  deleteOrder(id: String!): Order!
+  updateOrder(id: String!, item: String!, quantity: Float!): Order!
+}
