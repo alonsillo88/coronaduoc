@@ -70,24 +70,6 @@ type Item {
   isGift: Boolean!
 }
 
-type History {
-  system: String!
-  creationDate: DateTime!
-  attributes: [HistoryAttribute!]!
-}
-
-"""
-A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
-"""
-scalar DateTime
-
-type HistoryAttribute {
-  dataType: String!
-  field: String!
-  oldValue: String!
-  newValue: String!
-}
-
 type LogisticsInfo {
   deliveryType: String!
   deliveryOptions: String!
@@ -108,6 +90,11 @@ type LogisticsInfo {
   trackingUrl: String
 }
 
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
 type Origin {
   facilityId: String!
   facilityName: String!
@@ -125,6 +112,19 @@ type Payment {
   authId: String
   value: Float!
   type: String
+}
+
+type History {
+  system: String!
+  creationDate: DateTime!
+  attributes: [HistoryAttribute!]!
+}
+
+type HistoryAttribute {
+  dataType: String!
+  field: String!
+  oldValue: String!
+  newValue: String!
 }
 
 type Order {
@@ -155,12 +155,12 @@ type Order {
 }
 
 type Query {
-  getOrders: [Order!]!
-  getOrder(id: String!): Order!
+  searchOrders(filter: OrderFilterInput!): [Order!]!
 }
 
-type Mutation {
-  createOrder(item: String!, quantity: Float!): Order!
-  deleteOrder(id: String!): Order!
-  updateOrder(id: String!, item: String!, quantity: Float!): Order!
+input OrderFilterInput {
+  externalOrderId: String
+  externalSequenceNumber: String
+  customerName: String
+  address: String
 }

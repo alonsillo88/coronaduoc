@@ -1,5 +1,5 @@
 import { Field, ObjectType } from '@nestjs/graphql';
-import { Address } from './adress.schema';
+import { Address } from './adress.entity';
 
 @ObjectType()
 export class Origin {
