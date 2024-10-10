@@ -7,7 +7,7 @@ type Role {
   name: String!
 
   """Permisos asociados a este rol"""
-  permissions: [String!]!
+  description: String!
 }
 
 type User {
@@ -32,7 +32,7 @@ type LoginResponse {
   firstName: String!
   lastName: String!
   email: String!
-  roles: [Role!]
+  roles: [String!]
   idSucursal: String!
 }
 

@@ -30,10 +30,11 @@ export class User extends Document {
   @Field(() => String)
   idSucursal: string;
 
-  @Prop({ type: [Types.ObjectId], ref: 'Role' })  // Referencia a múltiples roles
+  @Prop({ type: [String], ref: 'Role' })  // Referencia a roles como strings
   @Field(() => [Role])  // Define un array de roles
   roles: Role[];
 
+  
   @Prop({ default: Date.now })
   @Field(() => Date)
   lastLogin: Date;

@@ -1,5 +1,4 @@
 import { ObjectType, Field } from '@nestjs/graphql';
-import { Role } from '../../user/entities/role.entity';  // Asegúrate de importar la entidad Role
 
 @ObjectType()
 export class LoginResponse {
@@ -15,8 +14,8 @@ export class LoginResponse {
   @Field()
   email: string;
 
-  @Field(() => [Role], { nullable: true })  
-  roles: Role[];  
+  @Field(() => [String], { nullable: true })  // Asegúrate de que es un array de strings y sea nullable
+  roles: string[];
 
   @Field()
   idSucursal: string;

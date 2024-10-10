@@ -11,8 +11,8 @@ export class Role extends Document {
   name: string;
 
   @Prop({ required: true })
-  @Field(() => [String], { description: 'Permisos asociados a este rol' })
-  permissions: string[];
+  @Field(() => String, { description: 'Permisos asociados a este rol' })
+  description: string;
 }
 
 export const RoleSchema = SchemaFactory.createForClass(Role);
