@@ -2,6 +2,40 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
+type Role {
+  """Nombre del rol (admin, picker, etc.)"""
+  name: String!
+
+  """Permisos asociados a este rol"""
+  permissions: [String!]!
+}
+
+type User {
+  firstName: String!
+  lastName: String!
+  email: String!
+  password: String!
+  rut: String!
+  idSucursal: String!
+  roles: [Role!]!
+  lastLogin: DateTime!
+  estado: String!
+}
+
+"""
+A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
+"""
+scalar DateTime
+
+type LoginResponse {
+  accessToken: String!
+  firstName: String!
+  lastName: String!
+  email: String!
+  roles: [Role!]
+  idSucursal: String!
+}
+
 type Customer {
   firstName: String!
   lastName: String!
@@ -90,11 +124,6 @@ type LogisticsInfo {
   trackingUrl: String
 }
 
-"""
-A date-time string at UTC, such as 2019-12-03T09:54:33Z, compliant with the date-time format.
-"""
-scalar DateTime
-
 type Origin {
   facilityId: String!
   facilityName: String!
@@ -155,12 +184,39 @@ type Order {
 }
 
 type Query {
-  searchOrders(filter: OrderFilterInput!): [Order!]!
+  findAllUsers: [User!]!
+  user(id: Int!): User!
+  getOrders(filter: OrderFilterInput): [Order!]!
 }
 
 input OrderFilterInput {
   externalOrderId: String
   externalSequenceNumber: String
   customerName: String
-  address: String
+  facilityId: String
+  orderStatus: String
+  deliveryType: String
+}
+
+type Mutation {
+  login(loginInput: LoginInput!): LoginResponse!
+  createUser(createUserInput: CreateUserInput!): User!
+  updateUser(updateUserInput: UpdateUserInput!): User!
+  removeUser(id: Int!): User!
+}
+
+input LoginInput {
+  email: String!
+  password: String!
+}
+
+input CreateUserInput {
+  """Example field (placeholder)"""
+  exampleField: Int!
+}
+
+input UpdateUserInput {
+  """Example field (placeholder)"""
+  exampleField: Int
+  id: Int!
 }

@@ -12,5 +12,10 @@ export class OrderFilterInput {
   customerName?: string;
 
   @Field({ nullable: true })
-  address?: string;
+  facilityId?: string; 
+  @Field({ nullable: true })
+  orderStatus?: string; 
+
+  @Field({ nullable: true })
+  deliveryType?: string;  
 }

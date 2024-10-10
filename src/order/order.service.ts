@@ -4,13 +4,15 @@ import { Model } from 'mongoose';
 import { Order } from './entities/order.entity';
 import { OrderFilterInput } from './dto/order-filter-input';
 
+
 @Injectable()
 export class OrderService {
   constructor(@InjectModel(Order.name) private orderModel: Model<Order>) {}
 
-  async search(filter: OrderFilterInput): Promise<Order[]> {
+  async searchOrders(filter: OrderFilterInput): Promise<Order[]> {
     const query: any = {};
 
+    // Filtrado dinámico basado en los parámetros
     if (filter.externalOrderId) {
       query.externalOrderId = filter.externalOrderId;
     }
@@ -20,10 +22,17 @@ export class OrderService {
     if (filter.customerName) {
       query['customer.firstName'] = new RegExp(filter.customerName, 'i');
     }
-    if (filter.address) {
-      query['destination.address.street'] = new RegExp(filter.address, 'i');
+    if (filter.facilityId) {
+      query['origin.facilityId'] = filter.facilityId;
+    }
+    if (filter.orderStatus) {
+      query.orderStatus = filter.orderStatus;
+    }
+    if (filter.deliveryType) {
+      query['logisticsInfo.deliveryType'] = filter.deliveryType;  // Filtrar por tipo de entrega
     }
 
     return this.orderModel.find(query).exec();
   }
 }
+

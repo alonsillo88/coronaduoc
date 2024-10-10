@@ -1,22 +1,40 @@
 import { Module } from '@nestjs/common';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { OrderModule } from './order/order.module';
 import { MongooseModule } from '@nestjs/mongoose';
+import { ConfigModule, ConfigService } from '@nestjs/config'; 
+import { AuthModule } from './auth/auth.module';
+import { UserModule } from './user/user.module';
 import { GraphQLModule } from '@nestjs/graphql';
 import { ApolloDriver, ApolloDriverConfig } from '@nestjs/apollo';
 import { join } from 'path';
+import { OrderModule } from './order/order.module';
 
 @Module({
   imports: [
-    MongooseModule.forRoot('mongodb://localhost:27017/backstore'),
+    ConfigModule.forRoot({
+      isGlobal: true, 
+    }),
+    MongooseModule.forRootAsync({
+      imports: [ConfigModule],
+      inject: [ConfigService],
+      useFactory: (configService: ConfigService) => {
+        console.log(`JWT_SECRET: ${configService.get<string>('JWT_SECRET')}`);
+        return {
+          uri: configService.get<string>('MONGO_URI'),
+        };
+      },
+    }),
+    AuthModule,
+    UserModule,
     OrderModule,
     GraphQLModule.forRoot<ApolloDriverConfig>({
       driver: ApolloDriver,
-      autoSchemaFile: join(process.cwd(), 'src/schema.gql'), // Autogenerar el schema
+      playground: true,
+      autoSchemaFile: join(process.cwd(), 'src/schema.gql'),
+      path: '/backstore',
+      formatError: (error) => {
+        return { message: error.message, code: error.extensions.code };
+      },
     }),
   ],
-  controllers: [AppController],
-  providers: [AppService],
 })
 export class AppModule {}
