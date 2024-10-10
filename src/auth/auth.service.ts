@@ -46,7 +46,7 @@ export class AuthService {
             firstName: user.firstName,
             lastName: user.lastName,
             sub: user._id,
-            roles: user.roles,  // Ya deberían ser strings (nombres de los roles)
+            roles: user.roles, 
             idSucursal: user.idSucursal,
         };
         
@@ -64,7 +64,7 @@ export class AuthService {
             email: user.email,
             firstName: user.firstName,
             lastName: user.lastName,
-            roles: user.roles,  // Asegúrate que sea un array de strings (nombres)
+            roles: user.roles,  
             idSucursal: user.idSucursal,
         };
     } 
