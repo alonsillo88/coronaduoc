@@ -125,9 +125,9 @@ class LoginScreenState extends State<LoginScreen> {
           onPressed: _isButtonEnabled ? _login : null,
           style: ElevatedButton.styleFrom(
             backgroundColor: CustomColors.purple, // Color de fondo del botón morado
-            padding: const EdgeInsets.symmetric(vertical: 15),
+            padding: const EdgeInsets.symmetric(vertical: 20),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(30),
+              borderRadius: BorderRadius.circular(10),
             ),
           ),
           child: const Text(

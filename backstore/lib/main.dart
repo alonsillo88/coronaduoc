@@ -40,7 +40,7 @@ class BackstoreApp extends StatelessWidget {
           color: CustomColors.black,  // Iconos en negro
         ),
       ),
-      useMaterial3: true,  // Usar el estilo Material 3
+      useMaterial3: true, 
     );
   }
 }

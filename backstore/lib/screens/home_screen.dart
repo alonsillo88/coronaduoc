@@ -1,3 +1,5 @@
+import 'package:backstore/screens/sync_screen.dart';
+import 'package:backstore/screens/picking_asignado_screen.dart';  // Importa la pantalla PickingAsignadoScreen
 import 'package:flutter/material.dart';
 import '../utils/custom_colors.dart';
 import '../widgets/custom_drawer.dart';  // Importa el menú reutilizable
@@ -40,22 +42,29 @@ class HomeScreen extends StatelessWidget {
       drawer: const CustomDrawer(),  // Reutiliza el menú lateral
       body: Padding(
         padding: const EdgeInsets.all(20.0),  // Espaciado alrededor del contenido
-        child: _buildBody(),
+        child: _buildBody(context),
       ),
     );
   }
 
-  Widget _buildBody() {
+  Widget _buildBody(BuildContext context) {
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,  // Centra los elementos verticalmente
       crossAxisAlignment: CrossAxisAlignment.stretch,  // Hace que los botones ocupen todo el ancho
       children: [
         _buildButton('SINCRONIZAR', () {
-          // Acción para el botón "SINCRONIZAR"
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const SyncScreen()),
+          );
         }),
         const SizedBox(height: 20),  // Espaciado entre botones
         _buildButton('PICKING ASIGNADO', () {
-          // Acción para el botón "PICKING ASIGNADO"
+          // Navega a la vista de Picking Asignado
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const PickingAsignadoScreen()),
+          );
         }),
         const SizedBox(height: 20),
         _buildButton('CONSOLIDADO RECOLECCIÓN', () {
@@ -76,12 +85,15 @@ class HomeScreen extends StatelessWidget {
         backgroundColor: CustomColors.purple,  // Botones de color morado
         padding: const EdgeInsets.symmetric(vertical: 20),  // Tamaño del botón
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(30),  // Bordes redondeados
+          borderRadius: BorderRadius.circular(10),  // Bordes redondeados
         ),
       ),
       child: Text(
         text,
-        style: const TextStyle(color: CustomColors.white),  // Texto blanco
+        style: const TextStyle(
+          color: CustomColors.white,  // Texto blanco
+          fontSize: 16,
+        ),
       ),
     );
   }
