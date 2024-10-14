@@ -2,7 +2,7 @@ import { Schema, Prop, SchemaFactory } from '@nestjs/mongoose';
 import { ObjectType, Field, Int } from '@nestjs/graphql';
 import { Document } from 'mongoose';
 
-@Schema()
+@Schema({ collection: 'sucursal' })
 @ObjectType()
 export class Sucursal extends Document {
 

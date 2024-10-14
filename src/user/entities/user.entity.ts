@@ -31,8 +31,8 @@ export class User extends Document {
   idSucursal: string;
 
   @Prop({ type: [String], ref: 'Role' })  // Referencia a roles como strings
-  @Field(() => [Role])  // Define un array de roles
-  roles: Role[];
+  @Field(() => [String])  // Define un array de roles
+  roles: String[];
 
   
   @Prop({ default: Date.now })

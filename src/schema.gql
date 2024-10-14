@@ -2,14 +2,6 @@
 # THIS FILE WAS AUTOMATICALLY GENERATED (DO NOT MODIFY)
 # ------------------------------------------------------
 
-type Role {
-  """Nombre del rol (admin, picker, etc.)"""
-  name: String!
-
-  """Permisos asociados a este rol"""
-  description: String!
-}
-
 type User {
   firstName: String!
   lastName: String!
@@ -17,7 +9,7 @@ type User {
   password: String!
   rut: String!
   idSucursal: String!
-  roles: [Role!]!
+  roles: [String!]!
   lastLogin: DateTime!
   estado: String!
 }
@@ -183,10 +175,32 @@ type Order {
   totalValue: Float!
 }
 
+type Sucursal {
+  """ID único de la sucursal en el sistema CORONA"""
+  idTienda: Int!
+
+  """Código postal de la sucursal"""
+  codigoPostal: String!
+
+  """Dirección de la sucursal"""
+  direccion: String!
+
+  """Estado de operación de la sucursal (activo/inactivo)"""
+  estado: String!
+
+  """Nombre de la sucursal"""
+  nombreSucursal: String!
+
+  """Tipo de tienda (por ejemplo, despacho a domicilio, click and collect)"""
+  tipo: String!
+}
+
 type Query {
   findAllUsers: [User!]!
   user(id: Int!): User!
   getOrders(filter: OrderFilterInput): [Order!]!
+  findAllSucursales: [Sucursal!]!
+  getSucursal(idTienda: Int!): Sucursal!
 }
 
 input OrderFilterInput {

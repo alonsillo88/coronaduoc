@@ -22,13 +22,12 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   async validate(payload: any) {
     this.logger.log(`Payload recibido: ${JSON.stringify(payload)}`);
   
-    const email = payload.username; // Usamos el email en vez del ID
+    const email = payload.email; // Usamos el email en vez del ID
     this.logger.debug(`Buscando usuario con email: ${email}`);
   
     const user = await this.userModel
-      .findOne({ email })  // Buscar por email en vez de ID
-      .populate('roles')
-      .exec();
+    .findOne({ email })  // Aquí buscar por email
+    .exec();  
   
     if (!user) {
       this.logger.warn('Usuario no encontrado para el token.');

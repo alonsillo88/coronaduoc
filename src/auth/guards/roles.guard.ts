@@ -1,7 +1,8 @@
-import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
+import { Injectable, CanActivate, ExecutionContext, Logger } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { GqlExecutionContext } from '@nestjs/graphql';
 import { User } from 'src/user/entities/user.entity';
+
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -10,12 +11,23 @@ export class RolesGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
     const requiredRoles = this.reflector.get<string[]>('roles', context.getHandler());
     if (!requiredRoles) {
-      return true;
+      return true;  // Si no hay roles requeridos, permitimos el acceso
     }
-
+    Logger.log("Entra a el siguiente LUGAR!");
     const ctx = GqlExecutionContext.create(context);
-    const user: User = ctx.getContext().req.user;  // Obtenemos el usuario
+    const user: User = ctx.getContext().req.user;  
+    Logger.debug("Roles del usuario:", user.roles);
+    Logger.debug("Roles requeridos:", requiredRoles);
+    const hasRequiredRole = user.roles.some((role: string) => {
+      return requiredRoles.includes(role);
+    });
 
-    return user.roles.some(role => requiredRoles.includes(role.name));  // Verificamos si el usuario tiene al menos uno de los roles requeridos
+    if (hasRequiredRole) {
+      Logger.log('El usuario tiene acceso');
+    } else {
+      Logger.log('El usuario no tiene los roles necesarios');
+    }
+  
+    return hasRequiredRole;
   }
 }
