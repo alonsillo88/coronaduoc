@@ -1,0 +1,61 @@
+.gestion-ordenes-container {
+    padding: 20px;
+}
+
+.filters {
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: space-between;
+}
+
+.filters label {
+    margin-right: 10px;
+}
+
+.order-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+.order-table th, .order-table td {
+    border: 1px solid #ccc;
+    padding: 10px;
+    text-align: left;
+}
+
+.btn-detalle {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    margin-right: 5px;
+}
+
+.btn-cancelar {
+    background-color: #f44336;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+}
+
+.assign-section {
+    display: flex;
+    align-items: center;
+}
+
+.assign-section {
+    margin-top: 20px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.assign-section select, .assign-section button {
+    margin-right: 10px;
+}
+
+.selected-info {
+    margin-top: 10px;
+    color: grey;
+}

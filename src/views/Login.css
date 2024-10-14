@@ -1,0 +1,45 @@
+/* Estilos de Login usando las variables de colores globales */
+
+.login-container {
+    background-color: var(--color-bg-white);  /* Usamos la variable global */
+    color: var(--color-text-black);  /* Usamos la variable global */
+    padding: 40px;
+    border-radius: 10px;
+    max-width: 400px;
+    margin-top: 100px;
+  }
+  
+  .title {
+    color: var(--color-purple-light);  /* Usamos la variable global */
+    margin-bottom: 20px;
+    text-align: center;
+  }
+  
+  .input {
+    margin-bottom: 20px;
+  }
+  
+  .submit-btn {
+    background-color: var(--color-purple-dark);  /* Usamos la variable global */
+    color: var(--color-text-black);  /* Usamos la variable global */
+    padding: 10px;
+    margin-top: 10px;
+    width: 100%;
+  }
+  
+  .submit-btn:hover {
+    background-color: var(--color-hover-purple);  /* Usamos la variable global */
+  }
+  
+  /* Estilos para el logo */
+  .logo-container {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+  }
+  
+  .corona-logo {
+    width: 200px;
+  }
+  
+  

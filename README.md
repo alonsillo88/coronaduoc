@@ -1,2 +1,0 @@
-# coronaduoc
-Proyecto informático CAPSTONE

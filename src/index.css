@@ -1,0 +1,82 @@
+/* Definición de la paleta de colores global */
+:root {
+  --color-bg-white: #FFFFFF;
+  --color-text-black: #000000;
+  --color-purple-light: #B300FF;
+  --color-purple-dark: #6200EA;
+  --color-hover-purple: #B300FF;
+  --color-text-white: #FFFFFF;
+}
+
+body {
+  background-color: var(--color-bg-white);
+  color: var(--color-text-black);
+  font-family: 'Arial', sans-serif;
+}
+
+h2 {
+  color: var(--color-purple-light);
+}
+
+button {
+  background-color: var(--color-purple-dark);
+  color: var(--color-text-white);
+  padding: 10px 20px;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+button:hover {
+  background-color: var(--color-hover-purple);
+}
+
+.home-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  flex-direction: column;
+}
+
+.welcome-container {
+  text-align: center;
+}
+
+.logout-button {
+  margin-top: 20px;
+}
+
+.drawer-content {
+  background-color: var(--color-purple-dark);
+  color: var(--color-text-white);
+}
+
+/* Estilos para el select personalizado */
+.custom-select {
+  width: 100%;
+  padding: 10px;
+  border-radius: 8px;
+  border: 2px solid var(--color-purple-light);
+  background-color: var(--color-bg-white);
+  color: var(--color-text-black);
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none; /* Para Safari */
+  -moz-appearance: none; /* Para Firefox */
+  transition: all 0.3s ease;
+}
+
+.custom-select:focus {
+  outline: none; /* Quitar el borde azul al enfocar */
+  box-shadow: 0 0 5px var(--color-purple-light);
+}
+
+/* Estilo para las opciones del select */
+.custom-option {
+  color: var(--color-purple-dark);
+  background-color: var(--color-bg-white);
+}
+
