@@ -15,10 +15,10 @@ class BackstoreApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Backstore',
-      theme: _buildTheme(),      
-      home: const LoadingScreen(),  // Pantalla de inicio
+      theme: _buildTheme(),
+      home: const LoadingScreen(), // Pantalla de inicio
       routes: {
-        '/login': (context) => const LoginScreen(),  // Ruta para el LoginScreen
+        '/login': (context) => LoginScreen(), // Ruta para el LoginScreen
       },
     );
   }
@@ -28,19 +28,19 @@ class BackstoreApp extends StatelessWidget {
       colorScheme: ColorScheme.fromSeed(
         seedColor: CustomColors.purple, // Color principal basado en "purple"
       ),
-      scaffoldBackgroundColor: CustomColors.background,  // Fondo blanco
+      scaffoldBackgroundColor: CustomColors.background, // Fondo blanco
       primaryColor: CustomColors.purple, // Color principal (morado)
       appBarTheme: const AppBarTheme(
-        backgroundColor: CustomColors.background,  // Color de fondo del AppBar
+        backgroundColor: CustomColors.background, // Color de fondo del AppBar
         titleTextStyle: TextStyle(
-          color: CustomColors.black,  // Texto en negro
+          color: CustomColors.black, // Texto en negro
           fontSize: 20,
         ),
         iconTheme: IconThemeData(
-          color: CustomColors.black,  // Iconos en negro
+          color: CustomColors.black, // Iconos en negro
         ),
       ),
-      useMaterial3: true, 
+      useMaterial3: true,
     );
   }
 }

@@ -1,7 +1,8 @@
-import 'package:backstore/widgets/static_logo.dart';
 import 'package:flutter/material.dart';
+import 'package:graphql_flutter/graphql_flutter.dart';
 import '../utils/custom_colors.dart';
 import '../screens/home_screen.dart';
+import '../widgets/static_logo.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -29,17 +30,56 @@ class LoginScreenState extends State<LoginScreen> {
     });
   }
 
-  void _login() {
+  void _login() async {
     String email = _emailController.text;
     String password = _passwordController.text;
 
-    if (email == 'usuario@dominio.cl' && password == 'password123') {
-      _showSnackBar('Inicio de sesión exitoso', Colors.green);
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
-      );
+    // Configuración del cliente GraphQL
+    final HttpLink httpLink = HttpLink('http://localhost:3000/backstore');
+
+    final GraphQLClient client = GraphQLClient(
+      link: httpLink,
+      cache: GraphQLCache(),
+    );
+
+    // Definir la mutación de login
+    const String loginMutation = """
+      mutation login(\$loginInput: LoginInput!) {
+        login(loginInput: \$loginInput) {
+          accessToken
+          firstName
+          lastName
+          email
+          roles
+          idSucursal
+        }
+      }
+    """;
+
+    final MutationOptions options = MutationOptions(
+      document: gql(loginMutation),
+      variables: {
+        'loginInput': {
+          'email': email,
+          'password': password,
+        },
+      },
+    );
+
+    final QueryResult result = await client.mutate(options);
+
+    if (result.hasException) {
+      _showSnackBar('Error en el inicio de sesión: ${result.exception.toString()}', Colors.red);
     } else {
-      _showSnackBar('Credenciales incorrectas, intenta de nuevo', Colors.red);
+      final data = result.data?['login'];
+      if (data != null) {
+        _showSnackBar('Inicio de sesión exitoso', Colors.green);
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+        );
+      } else {
+        _showSnackBar('Credenciales incorrectas, intenta de nuevo', Colors.red);
+      }
     }
   }
 
@@ -69,12 +109,12 @@ class LoginScreenState extends State<LoginScreen> {
               'BACKSTORE\nMÓVIL',
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 18, // Tamaño de fuente ajustado
+                fontSize: 18, 
                 fontWeight: FontWeight.bold,
-                color: CustomColors.purple, // Color del texto en morado
+                color: CustomColors.purple,
               ),
             ),
-            const SizedBox(height: 80), // Espacio ajustado entre el logo y el formulario
+            const SizedBox(height: 80),
             _buildForm(),
           ],
         ),
@@ -90,10 +130,10 @@ class LoginScreenState extends State<LoginScreen> {
           controller: _emailController,
           decoration: const InputDecoration(
             labelText: 'Email',
-            hintText: 'usuario@dominio.cl',
+            hintText: 'Ingresa tu email',
             border: OutlineInputBorder(),
             focusedBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: CustomColors.purple), // Borde morado
+              borderSide: BorderSide(color: CustomColors.purple),
             ),
           ),
         ),
@@ -105,12 +145,12 @@ class LoginScreenState extends State<LoginScreen> {
             labelText: 'Contraseña',
             border: const OutlineInputBorder(),
             focusedBorder: const OutlineInputBorder(
-              borderSide: BorderSide(color: CustomColors.purple), // Borde morado
+              borderSide: BorderSide(color: CustomColors.purple),
             ),
             suffixIcon: IconButton(
               icon: Icon(
                 _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
-                color: CustomColors.black, // Color negro para el icono
+                color: CustomColors.black,
               ),
               onPressed: () {
                 setState(() {
@@ -120,11 +160,11 @@ class LoginScreenState extends State<LoginScreen> {
             ),
           ),
         ),
-        const SizedBox(height: 30), // Espacio entre el campo de contraseña y el botón
+        const SizedBox(height: 30),
         ElevatedButton(
           onPressed: _isButtonEnabled ? _login : null,
           style: ElevatedButton.styleFrom(
-            backgroundColor: CustomColors.purple, // Color de fondo del botón morado
+            backgroundColor: CustomColors.purple,
             padding: const EdgeInsets.symmetric(vertical: 20),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(10),
@@ -132,7 +172,7 @@ class LoginScreenState extends State<LoginScreen> {
           ),
           child: const Text(
             'Ingresar',
-            style: TextStyle(color: CustomColors.white), // Texto blanco
+            style: TextStyle(color: CustomColors.white),
           ),
         ),
       ],
