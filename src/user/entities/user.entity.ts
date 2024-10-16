@@ -34,7 +34,6 @@ export class User extends Document {
   @Field(() => [String])  // Define un array de roles
   roles: String[];
 
-  
   @Prop({ default: Date.now })
   @Field(() => Date)
   lastLogin: Date;

@@ -197,6 +197,7 @@ type Sucursal {
 
 type Query {
   findAllUsers: [User!]!
+  getPickersBySucursal(idSucursal: String!): [User!]!
   user(id: Int!): User!
   getOrders(filter: OrderFilterInput): [Order!]!
   findAllSucursales: [Sucursal!]!
@@ -216,7 +217,6 @@ type Mutation {
   login(loginInput: LoginInput!): LoginResponse!
   createUser(createUserInput: CreateUserInput!): User!
   updateUser(updateUserInput: UpdateUserInput!): User!
-  removeUser(id: Int!): User!
 }
 
 input LoginInput {

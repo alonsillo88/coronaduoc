@@ -23,9 +23,18 @@ export class UserResolver {
 
   @Query(() => [User])
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('Administrador Global', 'Administrador de Tienda')  // Aquí puedes especificar los roles que pueden acceder
+  @Roles('Administrador Global', 'Administrador de Tienda')  
   findAllUsers() {
     return this.userService.findAll();
+  }
+
+  @Query(() => [User])
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('Administrador Global', 'Administrador de Tienda')  
+  getPickersBySucursal(
+    @Args('idSucursal', { type: () => String }) idSucursal: string, // Parámetro para filtrar por sucursal
+  ) {
+    return this.userService.getPickersBySucursal(idSucursal, 'Picker');
   }
 
   // Obtener un usuario por ID, permitido solo para roles específicos
@@ -36,7 +45,7 @@ export class UserResolver {
     return this.userService.findOne(id);
   }
 
-  // Actualizar un usuario, solo administradores globales pueden hacerlo
+
   @Mutation(() => User)
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('Administrador Global')
@@ -44,11 +53,4 @@ export class UserResolver {
     return this.userService.update(updateUserInput.id, updateUserInput);
   }
 
-  // Eliminar un usuario, acceso restringido a administradores globales
-  @Mutation(() => User)
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('Administrador Global')
-  removeUser(@Args('id', { type: () => Int }) id: number) {
-    return this.userService.remove(id);
-  }
 }

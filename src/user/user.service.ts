@@ -23,11 +23,18 @@ export class UserService {
     return `This action returns a #${id} user`;
   }
 
+
+  async getPickersBySucursal(idSucursal: string, role: string): Promise<User[]> {
+    return this.userModel.find({
+      idSucursal: idSucursal,
+      roles: role, 
+    }).exec();
+  }
+
   update(id: number, updateUserInput: UpdateUserInput) {
     return `This action updates a #${id} user`;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
-  }
+
+
 }
