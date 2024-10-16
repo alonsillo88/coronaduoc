@@ -18,7 +18,7 @@ class BackstoreApp extends StatelessWidget {
       theme: _buildTheme(),
       home: const LoadingScreen(), // Pantalla de inicio
       routes: {
-        '/login': (context) => LoginScreen(), // Ruta para el LoginScreen
+        '/login': (context) => const LoginScreen(), // Ruta para el LoginScreen
       },
     );
   }
