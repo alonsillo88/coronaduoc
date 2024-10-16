@@ -53,14 +53,4 @@ export const login = async (email, password) => {
     }
 };
 
-export const logout = () => {
-    console.log('authApi.js : Iniciando el proceso de logout...');
-    console.log('authApi.js : Estado del localStorage antes de limpiar:', { ...localStorage });
-    
-    localStorage.clear();  // Limpiamos el almacenamiento local
-    
-    console.log('authApi.js : Estado del localStorage después de limpiar:', { ...localStorage });
-    console.log('authApi.js : Redirigiendo al login...');
-    
-    window.location.href = '/login'; // Redirigir al login
-};
+

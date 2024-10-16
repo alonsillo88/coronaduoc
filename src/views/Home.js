@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import MenuPrincipal from '../components/MenuPrincipal';
 import { getAllSucursales, getSucursal } from '../api/sucursalApi';
-import { logout } from '../api/authApi';
+
 
 const Home = () => {
   const [selectedTienda, setSelectedTienda] = useState('');
@@ -54,9 +54,7 @@ const Home = () => {
     }
   }, []);
 
-  const handleLogout = () => {
-    logout();
-  };
+
 
   const handleTiendaChange = (e) => {
     const selectedId = e.target.value;
@@ -106,7 +104,7 @@ const Home = () => {
           </div>
         )}
 
-        <button className="logout-button" onClick={handleLogout}>Cerrar sesión</button>
+    
       </div>
     </div>
   );
