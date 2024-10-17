@@ -5,7 +5,8 @@ import MenuPrincipal from './MenuPrincipal';
 const ProtectedLayout = ({ user, role, selectedTienda, onTiendaChange, sucursales, sucursalAsignada, onLogout }) => {
     if (!user || !role || !onLogout) {
         // Retorna un mensaje de carga o simplemente no renderiza hasta que estén todos los props
-        return <div>Cargando componentes...</div>;
+        window.location.reload();
+        return <div>Entrando al sistema...</div>;
     }
 
     return (

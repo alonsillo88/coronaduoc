@@ -29,8 +29,15 @@ const Login = ({ setIsAuthenticated }) => {
             const loginData = await login(email, password);
 
             if (loginData && loginData.accessToken) {
-                console.log('Login.js : Token guardado en localStorage:', localStorage.getItem('token'));
+                // Guardar datos del usuario en el localStorage
+                localStorage.setItem('token', loginData.accessToken);
+                localStorage.setItem('nombreUsuario', loginData.firstName);
+                localStorage.setItem('apellidoUsuario', loginData.lastName);
+                localStorage.setItem('emailUsuario', email);
+                localStorage.setItem('rolesUsuario', JSON.stringify(loginData.roles));
+                localStorage.setItem('idSucursal', loginData.idSucursal);
                 setIsAuthenticated(true); // Actualiza el estado de autenticación
+                
                 navigate('/home', { replace: true });
             } else {
                 setError('Error en la autenticación.');

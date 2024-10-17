@@ -4,13 +4,18 @@ import Login from './views/Login';
 import Home from './views/Home';
 import PickerOrdenes from './views/PickerOrdenes';
 import GestionOrdenes from './views/GestionOrdenes';
+import AdminUsuarios from './views/AdminUsuarios';
+import AdminSucursales from './views/AdminSucursales';
 import ProtectedLayout from './components/ProtectedLayout';
+import { getAllSucursales, getSucursal } from './api/sucursalApi';
 
 const App = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
   const [selectedTienda, setSelectedTienda] = useState('');
-  const [userLoaded, setUserLoaded] = useState(false); // Controla si los datos del usuario están cargados
+  const [sucursales, setSucursales] = useState([]);
+  const [sucursalAsignada, setSucursalAsignada] = useState(null);
+  const [userLoaded, setUserLoaded] = useState(false);
 
   useEffect(() => {
     const token = localStorage.getItem('token');
@@ -23,23 +28,62 @@ const App = () => {
         idSucursal: localStorage.getItem('idSucursal'),
       };
       setUser(savedUser);
-      setSelectedTienda(savedUser.idSucursal); // Establece la tienda desde el localStorage
+      setSelectedTienda(savedUser.idSucursal);
       setIsAuthenticated(true);
+
+      // Si el usuario es Administrador Global, carga todas las sucursales
+      if (savedUser.roles.includes('Administrador Global')) {
+        getAllSucursales(token)
+          .then((data) => {
+            setSucursales(data);
+          })
+          .catch((error) => {
+            console.error('Error al obtener sucursales:', error);
+          });
+      } else {
+        // Si no es Administrador Global, carga solo la sucursal asignada
+        getSucursal(token, savedUser.idSucursal)
+          .then((data) => {
+            setSucursalAsignada(data.nombreSucursal);
+            setSelectedTienda(data.idTienda);
+          })
+          .catch((error) => {
+            console.error('Error al obtener la sucursal asignada:', error);
+          });
+      }
     } else {
-      setIsAuthenticated(false); // Asegurarse de que el usuario esté no autenticado si no hay token
+      setIsAuthenticated(false);
     }
-    setUserLoaded(true); // Señalamos que los datos del usuario ya se han cargado
-  
-    console.log("App.js: Estado de isAuthenticated y userLoaded después del useEffect:", { isAuthenticated, userLoaded });
-  }, []);
-  
+    setUserLoaded(true);
+  }, []); // Removido isAuthenticated para evitar recargas innecesarias
 
   const handleLogout = () => {
-    console.log("App.js: se ejecuta el HandleLogout")
-    localStorage.clear(); // Limpiamos localStorage al cerrar sesión
-    setIsAuthenticated(false); // Actualizamos el estado de autenticación
-    setUser(null); // Limpiamos el estado del usuario
+    console.log("App.js: se ejecuta el HandleLogout");
+    localStorage.clear();
+    setIsAuthenticated(false);
+    setUser(null);
+    setSucursales([]);
+    setSucursalAsignada(null);
   };
+
+  const handleTiendaChange = (e) => {
+    const selectedId = e;
+    setSelectedTienda(selectedId);
+    localStorage.setItem("idSucursal", selectedId);
+    console.log("Tienda seleccionada:", selectedId);
+    window.location.reload();
+    if (user?.roles.includes('Administrador Global')) {
+      const nuevaSucursal = sucursales.find((sucursal) => sucursal.idTienda === selectedId);
+      setSucursalAsignada(nuevaSucursal ? nuevaSucursal.nombreSucursal : 'No asignada');
+    }
+  };
+
+  useEffect(() => {
+    // Sincronizar la tienda seleccionada en el almacenamiento local
+    if (selectedTienda) {
+      localStorage.setItem('selectedTienda', selectedTienda);
+    }
+  }, [selectedTienda]);
 
   if (!userLoaded) {
     return <div>Cargando...</div>; // Mostrar pantalla de carga mientras se cargan los datos
@@ -48,26 +92,76 @@ const App = () => {
   return (
     <Router>
       <Routes>
-        {/* Ruta de login */}
         <Route path="/login" element={<Login setIsAuthenticated={setIsAuthenticated} />} />
 
-        {/* Rutas protegidas */}
-        <Route element={<ProtectedLayout user={user} role={user?.roles} selectedTienda={selectedTienda} onLogout={() => handleLogout} />}>
+        <Route
+          element={
+            <ProtectedLayout
+              user={user}
+              role={user?.roles}
+              selectedTienda={selectedTienda}
+              onTiendaChange={handleTiendaChange}
+              sucursales={sucursales}
+              sucursalAsignada={sucursalAsignada}
+              onLogout={handleLogout}
+            />
+          }
+        >
           <Route
             path="/home"
-            element={isAuthenticated ? <Home user={user} onLogout={handleLogout} /> : <Navigate to="/login" />} 
+            element={isAuthenticated ? <Home user={user} onLogout={handleLogout} /> : <Navigate to="/login" />}
           />
           <Route
             path="/ordenes-picking"
-            element={isAuthenticated && user?.roles.includes('Picker') ? <PickerOrdenes user={user} /> : <Navigate to="/login" />}
+            element={
+              isAuthenticated && user?.roles.includes('Picker') ? (
+                <PickerOrdenes 
+                user={user} 
+                token={localStorage.getItem('token')}
+                selectedTienda={selectedTienda}
+                />
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
           />
           <Route
             path="/admin-ordenes"
-            element={isAuthenticated && user?.roles.includes('Administrador de Tienda') ? <GestionOrdenes user={user} role={user?.roles} selectedTienda={selectedTienda} token={localStorage.getItem('token')} /> : <Navigate to="/login" />}
+            element={
+              isAuthenticated && user?.roles.includes('Administrador de Tienda') ? (
+                <GestionOrdenes
+                  user={user}
+                  role={user?.roles}
+                  selectedTienda={selectedTienda}
+                  token={localStorage.getItem('token')}
+                />
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
+          />
+          <Route
+            path="/admin-usuarios"
+            element={
+              isAuthenticated && user?.roles.includes('Administrador Global') ? (
+                <AdminUsuarios user={user} token={localStorage.getItem('token')} />
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
+          />
+          <Route
+            path="/admin-sucursales"
+            element={
+              isAuthenticated && user?.roles.includes('Administrador Global') ? (
+                <AdminSucursales user={user} token={localStorage.getItem('token')} />
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
           />
         </Route>
 
-        {/* Redirigir al home si está autenticado, de lo contrario al login */}
         <Route path="*" element={<Navigate to={isAuthenticated ? "/home" : "/login"} />} />
       </Routes>
     </Router>

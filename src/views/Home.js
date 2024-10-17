@@ -25,18 +25,7 @@ const Home = () => {
       
       setUser(savedUser);
 
-      if (savedUser.roles.includes('Administrador Global')) {
-        // Carga todas las sucursales si es Administrador Global
-        getAllSucursales(savedUser.token)
-          .then((data) => {
-            setSucursales(data);
-            setLoading(false);
-          })
-          .catch((error) => {
-            console.error('Error al obtener sucursales:', error);
-            setLoading(false);
-          });
-      } else {
+     
         // Carga la sucursal asignada si no es Administrador Global
         getSucursal(savedUser.token, savedUser.idSucursal)
           .then((data) => {
@@ -49,20 +38,9 @@ const Home = () => {
             setLoading(false);
           });
       }
-    } else {
-      setLoading(false);
-    }
+    
   }, []);
 
-
-
-  const handleTiendaChange = (e) => {
-    const selectedId = e.target.value;
-    setSelectedTienda(selectedId);
-    // Si cambia la tienda, asigna esa tienda como sucursal actual
-    const nuevaSucursal = sucursales.find((sucursal) => sucursal.idTienda === selectedId);
-    setSucursalAsignada(nuevaSucursal); // Actualiza la sucursal asignada
-  };
 
   if (loading) {
     return <div>Cargando...</div>; // Muestra un mensaje mientras se carga la data
@@ -74,35 +52,14 @@ const Home = () => {
 
   return (
     <div className="home-container">
-      <MenuPrincipal 
-        role={user.roles} 
-        selectedTienda={selectedTienda} 
-        onTiendaChange={handleTiendaChange} 
-        sucursales={sucursales} 
-        user={user} 
-        sucursalAsignada={sucursalAsignada}
-      />
-
       <div className="welcome-container">
         <h2>Bienvenido {user.firstName} {user.lastName}!</h2>
 
-        {user.roles && user.roles.includes('Administrador Global') ? (
-          <div className="selector-container">
-            <label htmlFor="tienda">Tienda Seleccionada:</label>
-            <select id="tienda" value={selectedTienda} onChange={handleTiendaChange}>
-              <option value="">Seleccione una tienda</option>
-              {sucursales.map((sucursal) => (
-                <option key={sucursal.idTienda} value={sucursal.idTienda}>
-                  {sucursal.nombreSucursal}
-                </option>
-              ))}
-            </select>
-          </div>
-        ) : (
+    
           <div>
-            Tienda asignada: <br/> <h3>{sucursalAsignada ? sucursalAsignada : 'No asignada asda'}</h3>
+            Tienda asignada: <br/> <h3>{sucursalAsignada ? sucursalAsignada : 'No asignada'}</h3>
           </div>
-        )}
+       
 
     
       </div>
