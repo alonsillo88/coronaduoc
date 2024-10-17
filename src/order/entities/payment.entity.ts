@@ -5,28 +5,28 @@ export class Payment {
   @Field()
   code: string;
 
-  @Field()
+  @Field({ nullable: true })
   codeDescription: string;
 
-  @Field()
+  @Field({ nullable: true })
   codeNumber: number;
 
-  @Field()
+  @Field({ nullable: true })
   documentNumber: string;
 
-  @Field()
+  @Field({ nullable: true })
   name: string;
 
-  @Field()
+  @Field({ nullable: true })
   installmentsNumber: number;
 
-  @Field()
+  @Field({ nullable: true })
   installmentsValue: number;
 
   @Field({ nullable: true })
   authId: string;
 
-  @Field()
+  @Field({ nullable: true })
   value: number;
 
   @Field({ nullable: true })

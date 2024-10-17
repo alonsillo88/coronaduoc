@@ -126,14 +126,14 @@ type Origin {
 
 type Payment {
   code: String!
-  codeDescription: String!
-  codeNumber: Float!
-  documentNumber: String!
-  name: String!
-  installmentsNumber: Float!
-  installmentsValue: Float!
+  codeDescription: String
+  codeNumber: Float
+  documentNumber: String
+  name: String
+  installmentsNumber: Float
+  installmentsValue: Float
   authId: String
-  value: Float!
+  value: Float
   type: String
 }
 
