@@ -64,11 +64,11 @@ export class OrderService {
   }
 
   async updateOrderForPicking(updateOrderInput: UpdateOrderInput): Promise<Order> {
-    const { orderId, items, orderStatusBackstore } = updateOrderInput;
+    const { externalOrderId, items, orderStatusBackstore } = updateOrderInput;
 
-    const order = await this.orderModel.findOne({ orderId });
+    const order = await this.orderModel.findOne({ externalOrderId });
     if (!order) {
-      throw new NotFoundException(`No se encontró la orden con ID: ${orderId}`);
+      throw new NotFoundException(`No se encontró la orden con externalOrderId: ${externalOrderId}`);
     }
 
     // Actualizar los ítems de la orden con la cantidad confirmada y motivo de quiebre si aplica
@@ -80,6 +80,7 @@ export class OrderService {
       }
     });
 
+    order.orderBackstoreStatusDate = new Date();
     // Actualizar el estado de la orden para Backstore
     order.orderBackstoreStatus = orderStatusBackstore;
 

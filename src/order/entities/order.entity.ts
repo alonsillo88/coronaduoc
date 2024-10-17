@@ -113,6 +113,10 @@ export class Order extends Document {
     @Field({ nullable: true })
     orderBackstoreStatus: string;
 
+    @Prop({ default: null })
+    @Field({ nullable: true })
+    orderBackstoreStatusDate: Date;
+
     @Prop({ type: Object, default: null })
     @Field(() => Assignment, { nullable: true })
     assignment: Assignment;

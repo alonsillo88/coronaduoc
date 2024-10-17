@@ -3,7 +3,7 @@ import { InputType, Field } from '@nestjs/graphql';
 @InputType()
 export class UpdateOrderInput {
   @Field(() => String)
-  orderId: string;
+  externalOrderId: string;
 
   @Field(() => [UpdateItemInput])
   items: UpdateItemInput[];
