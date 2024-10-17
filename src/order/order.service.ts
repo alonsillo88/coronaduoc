@@ -5,6 +5,7 @@ import { Order } from './entities/order.entity';
 import { OrderFilterInput } from './dto/order-filter-input';
 import { AssignOrdersInput } from './dto/assign-orders-input';
 import { UpdateOrderInput } from './dto/update-order.input';
+import { Item } from './entities/item.entity';
 
 
 @Injectable()
@@ -66,26 +67,36 @@ export class OrderService {
   async updateOrderForPicking(updateOrderInput: UpdateOrderInput): Promise<Order> {
     const { externalOrderId, items, orderStatusBackstore } = updateOrderInput;
 
+    // Buscar la orden en la base de datos
     const order = await this.orderModel.findOne({ externalOrderId });
     if (!order) {
-      throw new NotFoundException(`No se encontró la orden con externalOrderId: ${externalOrderId}`);
+        throw new NotFoundException(`No se encontró la orden con externalOrderId: ${externalOrderId}`);
     }
 
-    // Actualizar los ítems de la orden con la cantidad confirmada y motivo de quiebre si aplica
-    items.forEach((itemUpdate) => {
-      const item = order.items.find((i) => i.productId === itemUpdate.productId);
-      if (item) {
-        item.quantityConfirmedBackstore = itemUpdate.quantityBackstoreConfirmados;
-        item.breakReason = itemUpdate.breakReason || null;
-      }
+    // Crear un nuevo array de ítems para actualizar la orden
+    const updatedItems = order.items.map((item) => {
+        const itemUpdate = items.find((i) => i.productId == item.productId);
+        if (itemUpdate) {
+            Logger.log(`Actualizando ítem: ${item.productId}`);
+            return {
+                ...item,
+                quantityConfirmedBackstore: itemUpdate.quantityBackstoreConfirmados,
+                breakReason: itemUpdate.breakReason || null,
+            };
+        }
+        return item;
     });
 
+    // Asignar los ítems actualizados a la orden
+    order.items = updatedItems;
+
+    // Actualizar el estado y la fecha de estado de la orden para Backstore
     order.orderBackstoreStatusDate = new Date();
-    // Actualizar el estado de la orden para Backstore
     order.orderBackstoreStatus = orderStatusBackstore;
 
-    return order.save();
-  }
+    // Guardar la orden con los ítems actualizados
+    return await order.save();
+}
     
 }
 
