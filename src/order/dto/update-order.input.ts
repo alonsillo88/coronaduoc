@@ -1,6 +1,25 @@
-import { CreateOrderInput } from './create-order.input';
-import { PartialType } from '@nestjs/mapped-types';
+import { InputType, Field } from '@nestjs/graphql';
 
-export class UpdateOrderInput extends PartialType(CreateOrderInput) {
-  id: number;
+@InputType()
+export class UpdateOrderInput {
+  @Field(() => String)
+  orderId: string;
+
+  @Field(() => [UpdateItemInput])
+  items: UpdateItemInput[];
+
+  @Field(() => String, { nullable: true })
+  orderStatusBackstore: string;
+}
+
+@InputType()
+export class UpdateItemInput {
+  @Field(() => Number)
+  productId: number;
+
+  @Field(() => Number)
+  quantityBackstoreConfirmados: number;
+
+  @Field(() => String, { nullable: true })
+  breakReason: string;
 }

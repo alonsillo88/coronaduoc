@@ -86,6 +86,8 @@ type Item {
   color: String
   size: Float
   quantity: Float!
+  quantityConfirmedBackstore: Float
+  breakReason: String
   shortQty: Float!
   price: Float!
   discount: Float!
@@ -148,6 +150,12 @@ type HistoryAttribute {
   newValue: String!
 }
 
+type Assignment {
+  assignedBy: String!
+  assignedTo: String!
+  assignmentDate: DateTime!
+}
+
 type Order {
   externalOrderId: String!
   cancelReason: String
@@ -173,6 +181,8 @@ type Order {
   subTotalValue: Float!
   taxValue: Float!
   totalValue: Float!
+  orderBackstoreStatus: String
+  assignment: Assignment
 }
 
 type Sucursal {
@@ -196,9 +206,9 @@ type Sucursal {
 }
 
 type Query {
-  findAllUsers: [User!]!
   getPickersBySucursal(idSucursal: String!): [User!]!
-  user(id: Int!): User!
+  findAllUsers: [User!]!
+  user(email: String!): User!
   getOrders(filter: OrderFilterInput): [Order!]!
   findAllSucursales: [Sucursal!]!
   getSucursal(idTienda: Int!): Sucursal!
@@ -211,12 +221,20 @@ input OrderFilterInput {
   facilityId: String
   orderStatus: String
   deliveryType: String
+  assignedTo: String
 }
 
 type Mutation {
   login(loginInput: LoginInput!): LoginResponse!
   createUser(createUserInput: CreateUserInput!): User!
   updateUser(updateUserInput: UpdateUserInput!): User!
+  updateUserPassword(email: String!, newPassword: String!): User!
+  removeUser(email: String!): Boolean!
+  assignOrders(input: AssignOrdersInput!): [Order!]!
+  updateOrderForPicking(updateOrderInput: UpdateOrderInput!): Order!
+  createSucursal(createSucursalInput: CreateSucursalInput!): Sucursal!
+  updateSucursal(updateSucursalInput: UpdateSucursalInput!): Sucursal!
+  removeSucursal(idTienda: Int!): Sucursal!
 }
 
 input LoginInput {
@@ -225,12 +243,59 @@ input LoginInput {
 }
 
 input CreateUserInput {
-  """Example field (placeholder)"""
-  exampleField: Int!
+  firstName: String!
+  lastName: String!
+  email: String!
+  password: String!
+  rut: String!
+  idSucursal: String!
+  roles: [String!]!
+  estado: String!
 }
 
 input UpdateUserInput {
-  """Example field (placeholder)"""
-  exampleField: Int
-  id: Int!
+  firstName: String
+  lastName: String
+  email: String!
+  password: String
+  rut: String
+  idSucursal: String
+  roles: [String!]
+  estado: String
+}
+
+input AssignOrdersInput {
+  orderIds: [String!]!
+  pickerEmail: String!
+  assignedBy: String!
+}
+
+input UpdateOrderInput {
+  orderId: String!
+  items: [UpdateItemInput!]!
+  orderStatusBackstore: String
+}
+
+input UpdateItemInput {
+  productId: Float!
+  quantityBackstoreConfirmados: Float!
+  breakReason: String
+}
+
+input CreateSucursalInput {
+  idTienda: Int!
+  codigoPostal: String!
+  direccion: String!
+  estado: String!
+  nombreSucursal: String!
+  tipo: String!
+}
+
+input UpdateSucursalInput {
+  idTienda: Int!
+  codigoPostal: String
+  direccion: String
+  estado: String
+  nombreSucursal: String
+  tipo: String
 }

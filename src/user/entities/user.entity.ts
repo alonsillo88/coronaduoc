@@ -22,7 +22,7 @@ export class User extends Document {
   @Field(() => String)
   password: string;
 
-  @Prop({ required: true })
+  @Prop({ required: false })
   @Field(() => String)
   rut: string;
 

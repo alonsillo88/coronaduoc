@@ -65,6 +65,12 @@ export class Item {
   @Field()
   quantity: number;
 
+  @Field({ nullable: true })
+  quantityConfirmedBackstore: number;
+
+  @Field({ nullable: true })
+  breakReason: string;
+
   @Field()
   shortQty: number;
 

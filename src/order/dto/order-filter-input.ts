@@ -13,9 +13,13 @@ export class OrderFilterInput {
 
   @Field({ nullable: true })
   facilityId?: string; 
+
   @Field({ nullable: true })
   orderStatus?: string; 
 
   @Field({ nullable: true })
   deliveryType?: string;  
+
+  @Field({ nullable: true })
+  assignedTo?: string;  
 }

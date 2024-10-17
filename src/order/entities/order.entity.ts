@@ -8,6 +8,7 @@ import { LogisticsInfo } from './logistics-info.entity';
 import { Origin } from './origin.entity';
 import { Payment } from './payment.entity';
 import { History } from './history.entity';
+import { Assignment } from './assingment.entity';
 
 @Schema()
 @ObjectType()
@@ -107,6 +108,14 @@ export class Order extends Document {
     @Prop({ required: true })
     @Field()
     totalValue: number;
+
+    @Prop({ default: null })
+    @Field({ nullable: true })
+    orderBackstoreStatus: string;
+
+    @Prop({ type: Object, default: null })
+    @Field(() => Assignment, { nullable: true })
+    assignment: Assignment;
 }
 
 export const OrderSchema = SchemaFactory.createForClass(Order);
