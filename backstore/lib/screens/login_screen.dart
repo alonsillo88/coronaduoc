@@ -1,8 +1,9 @@
+import 'package:backstore/widgets/static_logo.dart';
 import 'package:flutter/material.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../utils/custom_colors.dart';
 import '../screens/home_screen.dart';
-import '../widgets/static_logo.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -30,20 +31,11 @@ class LoginScreenState extends State<LoginScreen> {
     });
   }
 
-  void _login() async {
+  Future<void> _login() async {
     String email = _emailController.text;
     String password = _passwordController.text;
 
-    // Configuración del cliente GraphQL
-    final HttpLink httpLink = HttpLink('http://localhost:3000/backstore');
-
-    final GraphQLClient client = GraphQLClient(
-      link: httpLink,
-      cache: GraphQLCache(),
-    );
-
-    // Definir la mutación de login
-    const String loginMutation = """
+    const loginMutation = '''
       mutation login(\$loginInput: LoginInput!) {
         login(loginInput: \$loginInput) {
           accessToken
@@ -54,31 +46,45 @@ class LoginScreenState extends State<LoginScreen> {
           idSucursal
         }
       }
-    """;
+    ''';
 
-    final MutationOptions options = MutationOptions(
-      document: gql(loginMutation),
-      variables: {
-        'loginInput': {
-          'email': email,
-          'password': password,
-        },
+    final variables = {
+      "loginInput": {
+        "email": email,
+        "password": password,
       },
+    };
+
+    final client = GraphQLProvider.of(context).value;
+    final result = await client.mutate(
+      MutationOptions(
+        document: gql(loginMutation),
+        variables: variables,
+      ),
     );
 
-    final QueryResult result = await client.mutate(options);
-
     if (result.hasException) {
-      _showSnackBar('Error en el inicio de sesión: ${result.exception.toString()}', Colors.red);
+      _showSnackBar('Error al iniciar sesión, intenta de nuevo', Colors.red);
     } else {
       final data = result.data?['login'];
       if (data != null) {
-        _showSnackBar('Inicio de sesión exitoso', Colors.green);
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => const HomeScreen()),
-        );
-      } else {
-        _showSnackBar('Credenciales incorrectas, intenta de nuevo', Colors.red);
+        final roles = List<String>.from(data['roles']);
+        if (roles.contains('Picker')) {
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('accessToken', data['accessToken']);
+          await prefs.setString('email', data['email']);
+          await prefs.setString('firstName', data['firstName']);
+          await prefs.setString('lastName', data['lastName']);
+          await prefs.setStringList('roles', roles);
+          await prefs.setString('idSucursal', data['idSucursal']);
+
+          _showSnackBar('Inicio de sesión exitoso', Colors.green);
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (context) => const HomeScreen()),
+          );
+        } else {
+          _showSnackBar('No tienes permisos para acceder', Colors.red);
+        }
       }
     }
   }
@@ -109,7 +115,7 @@ class LoginScreenState extends State<LoginScreen> {
               'BACKSTORE\nMÓVIL',
               textAlign: TextAlign.center,
               style: TextStyle(
-                fontSize: 18, 
+                fontSize: 18,
                 fontWeight: FontWeight.bold,
                 color: CustomColors.purple,
               ),
@@ -130,7 +136,7 @@ class LoginScreenState extends State<LoginScreen> {
           controller: _emailController,
           decoration: const InputDecoration(
             labelText: 'Email',
-            hintText: 'Ingresa tu email',
+            hintText: 'usuario@dominio.cl',
             border: OutlineInputBorder(),
             focusedBorder: OutlineInputBorder(
               borderSide: BorderSide(color: CustomColors.purple),

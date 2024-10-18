@@ -1,10 +1,29 @@
 import 'package:flutter/material.dart';
+import 'package:graphql_flutter/graphql_flutter.dart';
 import 'screens/loading_screen.dart';
 import 'screens/login_screen.dart';
 import 'utils/custom_colors.dart';
 
-void main() {
-  runApp(const BackstoreApp());
+void main() async {
+  await initHiveForFlutter();
+
+  final HttpLink httpLink = HttpLink(
+    'http://localhost:3000/backstore',
+  );
+
+  ValueNotifier<GraphQLClient> client = ValueNotifier(
+    GraphQLClient(
+      link: httpLink,
+      cache: GraphQLCache(store: HiveStore()),
+    ),
+  );
+
+  runApp(
+    GraphQLProvider(
+      client: client,
+      child: const BackstoreApp(),
+    ),
+  );
 }
 
 class BackstoreApp extends StatelessWidget {

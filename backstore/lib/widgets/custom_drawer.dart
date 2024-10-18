@@ -24,7 +24,6 @@ class CustomDrawer extends StatelessWidget {
             ExpansionTile(
               title: Text('SINCRONIZAR', style: TextStyle(color: CustomColors.black)),
               children: [
-                ListTile(title: Text('Historial', style: TextStyle(color: CustomColors.black))),
                 ListTile(title: Text('Enviar/Recibir', style: TextStyle(color: CustomColors.black))),
               ],
             ),
@@ -32,9 +31,7 @@ class CustomDrawer extends StatelessWidget {
               title: Text('PICKING ASIGNADO', style: TextStyle(color: CustomColors.black)),
               children: [
                 ListTile(title: Text('Pendientes', style: TextStyle(color: CustomColors.black))),
-                ListTile(title: Text('En Curso', style: TextStyle(color: CustomColors.black))),
                 ListTile(title: Text('Finalizados', style: TextStyle(color: CustomColors.black))),
-                ListTile(title: Text('Quiebres', style: TextStyle(color: CustomColors.black))),
               ],
             ),
             ExpansionTile(

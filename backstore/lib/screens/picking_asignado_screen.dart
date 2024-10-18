@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert'; // Para manejar la conversión JSON
 import '../utils/custom_colors.dart';
-import '../widgets/static_logo.dart'; // Usar el logo estático reutilizable
+import '../widgets/static_logo.dart';
+import 'order_detail_screen.dart'; // Importa la pantalla de detalle de la orden
 
 class PickingAsignadoScreen extends StatefulWidget {
   const PickingAsignadoScreen({super.key});
@@ -11,79 +14,25 @@ class PickingAsignadoScreen extends StatefulWidget {
 
 class _PickingAsignadoScreenState extends State<PickingAsignadoScreen> {
   bool _isExpandedPending = true; // Inicialmente expandida
-  bool _isExpandedInProgress = false;
-  bool _isExpandedCompleted = false;
-  bool _isExpandedBreaks = false; // Nueva expansión para "Quiebres"
+  bool _isExpandedCompleted = false; // Expandida finalizados
 
-  final List<Map<String, dynamic>> _pickingData = [
-    {
-      'priority': 'high',
-      'code': '1342743713749-01',
-      'id': '3713749',
-      'status': 'C&C',
-      'date': '20/06/2023',
-      'products': 2,
-      'color': Colors.red
-    },
-    {
-      'priority': 'medium',
-      'code': '1342743713749-02',
-      'id': '3713750',
-      'status': 'SFS',
-      'date': '20/06/2023',
-      'products': 2,
-      'color': Colors.yellow
-    },
-    {
-      'priority': 'low',
-      'code': '1342743713749-03',
-      'id': '3713751',
-      'status': 'C&C',
-      'date': '20/06/2023',
-      'products': 2,
-      'color': Colors.green
-    },
-    // Agregar más datos aquí
-  ];
+  List<Map<String, dynamic>> _pickingData = [];
 
-  final List<Map<String, dynamic>> _quiebresData = [
-    {
-      'tipo': 'Total',
-      'nroOrden': '1342743713749-01',
-      'fecha': '10/06/23',
-      'cantidad': '3/3'
-    },
-    {
-      'tipo': 'Total',
-      'nroOrden': '1342743713749-02',
-      'fecha': '10/06/23',
-      'cantidad': '2/2'
-    },
-    {
-      'tipo': 'Parcial',
-      'nroOrden': '1342743713749-03',
-      'fecha': '10/06/23',
-      'cantidad': '1/3'
-    },
-    {
-      'tipo': 'Total',
-      'nroOrden': '1342743713749-04',
-      'fecha': '10/06/23',
-      'cantidad': '1/1'
-    },
-    {
-      'tipo': 'Parcial',
-      'nroOrden': '1342743713749-05',
-      'fecha': '10/06/23',
-      'cantidad': '1/3'
-    },
-    {
-      'tipo': 'Parcial',
-      'nroOrden': '1342743713749-06',
-      'fecha': '10/06/23',
-      'cantidad': '1/3'
-    },
-  ];
+  @override
+  void initState() {
+    super.initState();
+    _loadPendingOrders(); // Carga las órdenes pendientes sincronizadas
+  }
+
+  Future<void> _loadPendingOrders() async {
+    final prefs = await SharedPreferences.getInstance();
+    final String? ordersJson = prefs.getString('orders');
+    if (ordersJson != null) {
+      setState(() {
+        _pickingData = List<Map<String, dynamic>>.from(json.decode(ordersJson));
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -105,8 +54,7 @@ class _PickingAsignadoScreenState extends State<PickingAsignadoScreen> {
         ),
         actions: [
           IconButton(
-            icon:
-                const Icon(Icons.account_circle, color: CustomColors.lightGray),
+            icon: const Icon(Icons.account_circle, color: CustomColors.lightGray),
             onPressed: () {
               // Acción para el icono de perfil
             },
@@ -132,20 +80,7 @@ class _PickingAsignadoScreenState extends State<PickingAsignadoScreen> {
               setState(() {
                 _isExpandedPending = !_isExpandedPending;
                 if (_isExpandedPending) {
-                  _isExpandedInProgress = false;
                   _isExpandedCompleted = false;
-                  _isExpandedBreaks = false;
-                }
-              });
-            }),
-            const SizedBox(height: 10),
-            _buildExpandableTile('EN CURSO', _isExpandedInProgress, () {
-              setState(() {
-                _isExpandedInProgress = !_isExpandedInProgress;
-                if (_isExpandedInProgress) {
-                  _isExpandedPending = false;
-                  _isExpandedCompleted = false;
-                  _isExpandedBreaks = false;
                 }
               });
             }),
@@ -155,19 +90,6 @@ class _PickingAsignadoScreenState extends State<PickingAsignadoScreen> {
                 _isExpandedCompleted = !_isExpandedCompleted;
                 if (_isExpandedCompleted) {
                   _isExpandedPending = false;
-                  _isExpandedInProgress = false;
-                  _isExpandedBreaks = false;
-                }
-              });
-            }),
-            const SizedBox(height: 10),
-            _buildExpandableTile('QUIEBRES', _isExpandedBreaks, () {
-              setState(() {
-                _isExpandedBreaks = !_isExpandedBreaks;
-                if (_isExpandedBreaks) {
-                  _isExpandedPending = false;
-                  _isExpandedInProgress = false;
-                  _isExpandedCompleted = false;
                 }
               });
             }),
@@ -198,77 +120,57 @@ class _PickingAsignadoScreenState extends State<PickingAsignadoScreen> {
         onExpansionChanged();
       },
       children: <Widget>[
-        if (title == 'QUIEBRES' && isExpanded) _buildBreaksTable(),
-        if (isExpanded && title != 'QUIEBRES') _buildPickingCardList(),
+        if (title == 'PENDIENTES' && isExpanded) _buildPickingCardList(),
+        if (title == 'FINALIZADOS' && isExpanded) _buildFinalizedList(),
       ],
     );
   }
 
   // Función para mostrar la lista de picking
   Widget _buildPickingCardList() {
+    if (_pickingData.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.all(10.0),
+        child: Text(
+          'No hay órdenes pendientes.',
+          textAlign: TextAlign.center,
+          style: TextStyle(fontSize: 14),
+        ),
+      );
+    }
     return Column(
       children: _pickingData.map((data) {
-        return _buildPickingCard(
-          color: data['color'],
-          text: '${data['code']} (${data['id']}) ${data['status']}',
-          pickingInfo:
-              'Fecha entrega/retiro: ${data['date']}\nCant. Productos: ${data['products']}',
+        return GestureDetector(
+          onTap: () => _navigateToOrderDetail(data),
+          child: _buildPickingCard(
+            color: Colors.red, // Cambiar según prioridad si es necesario
+            text: '${data['externalOrderId']}',
+            pickingInfo: 'Fecha de creación: ${data['creationDate']}',
+          ),
         );
       }).toList(),
     );
   }
 
-  // Función para mostrar la tabla de quiebres sin scroll horizontal
-  Widget _buildBreaksTable() {
-    return Column(
-      children: [
-        // Encabezados de la tabla, fuera del scroll
-        const Row(
-          children: [
-            Expanded(
-                flex: 2,
-                child: Text('Tipo',
-                    style: TextStyle(fontWeight: FontWeight.bold))),
-            Expanded(
-                flex: 4,
-                child: Text('Nro. Orden',
-                    style: TextStyle(fontWeight: FontWeight.bold))),
-            Expanded(
-                flex: 2,
-                child: Text('Fecha',
-                    style: TextStyle(fontWeight: FontWeight.bold))),
-            Expanded(
-                flex: 2,
-                child: Text('Cantidad',
-                    style: TextStyle(fontWeight: FontWeight.bold))),
-          ],
-        ),
-        const SizedBox(height: 10), // Espacio entre encabezado y datos
-        // Datos con scroll vertical
-        SizedBox(
-          height: 200, // Ajustamos la altura de la tabla
-          child: SingleChildScrollView(
-            child: Column(
-              children: _quiebresData.map((data) {
-                return Row(
-                  children: [
-                    Expanded(flex: 2, child: Text(data['tipo'])),
-                    Expanded(flex: 4, child: Text(data['nroOrden'])),
-                    Expanded(flex: 2, child: Text(data['fecha'])),
-                    Expanded(
-                      flex: 2,
-                      child: Text(
-                        data['cantidad'],
-                        textAlign: TextAlign.center, // Centra el texto
-                      ),
-                    ),
-                  ],
-                );
-              }).toList(),
-            ),
-          ),
-        ),
-      ],
+  // Navega a la pantalla de detalles de la orden
+  void _navigateToOrderDetail(Map<String, dynamic> orderData) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => OrderDetailScreen(order: orderData), // Cambiado 'orderData' al parámetro 'order'
+      ),
+    );
+  }
+
+  // Función para mostrar la lista de finalizados (en este ejemplo, se deja vacío)
+  Widget _buildFinalizedList() {
+    return const Padding(
+      padding: EdgeInsets.all(10.0),
+      child: Text(
+        'No hay órdenes finalizadas.',
+        textAlign: TextAlign.center,
+        style: TextStyle(fontSize: 14),
+      ),
     );
   }
 
