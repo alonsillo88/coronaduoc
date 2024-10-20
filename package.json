@@ -8,7 +8,7 @@
   "scripts": {
     "build": "nest build",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
-    "start": "nest start",
+    "start": "cross-env NODE_ENV=DEV cross-env LOG_LEVEL=ALL nest start --watch",
     "start:dev": "cross-env NODE_ENV=DEV cross-env LOG_LEVEL=ALL nest start --watch",
     "start:qa": "cross-env NODE_ENV=QA cross-env LOG_LEVEL=ALL nest start --watch",
     "start:prd": "cross-env NODE_ENV=PRD cross-env LOG_LEVEL=ALL nest start --watch",
@@ -18,7 +18,8 @@
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "postinstall": "npm install"
   },
   "dependencies": {
     "@apollo/server": "^4.11.0",

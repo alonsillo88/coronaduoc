@@ -18,7 +18,7 @@ import { SucursalModule } from './sucursal/sucursal.module';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
-        console.log(`JWT_SECRET: ${configService.get<string>('JWT_SECRET')}`);
+        
         return {
           uri: configService.get<string>('MONGO_URI'),
         };

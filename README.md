@@ -75,8 +75,6 @@ Configurar el entorno
 Crear un archivo .env en la raíz del proyecto con las siguientes variables de entorno:
 
 NODE_ENV=DEV
-MONGODB_URI=tu_uri_de_mongodb
-JWT_SECRET=tu_clave_secreta_para_jwt
 PORT=3000
 
 Ejecutar el servidor en desarrollo
