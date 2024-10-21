@@ -1,9 +1,10 @@
 import 'package:backstore/screens/sync_screen.dart';
 import 'package:backstore/screens/picking_asignado_screen.dart';
+import 'package:backstore/utils/custom_colors.dart';
+import 'package:backstore/widgets/custom_drawer.dart';
+import 'package:backstore/widgets/static_logo.dart';
 import 'package:flutter/material.dart';
-import '../utils/custom_colors.dart';
-import '../widgets/custom_drawer.dart';
-import '../widgets/static_logo.dart';
+
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
