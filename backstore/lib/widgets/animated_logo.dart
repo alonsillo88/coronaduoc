@@ -6,7 +6,7 @@ class AnimatedCoronaLogo extends StatefulWidget {
   final Color color;  // Color ajustable
 
   const AnimatedCoronaLogo({
-    super.key,  // Usando super.parameters
+    super.key,
     this.size = 300, // Tamaño por defecto
     this.color = Colors.black, // Color por defecto
   });
@@ -16,22 +16,12 @@ class AnimatedCoronaLogo extends StatefulWidget {
 }
 
 class AnimatedCoronaLogoState extends State<AnimatedCoronaLogo> with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _animation;
+  late final AnimationController _controller = AnimationController(
+    duration: const Duration(seconds: 1), // Duración de la animación completa
+    vsync: this,
+  )..repeat();  // Repetir la animación de forma continua
 
-  @override
-  void initState() {
-    super.initState();
-
-    // Configurar la animación de la "O" giratoria
-    _controller = AnimationController(
-      duration: const Duration(seconds: 1),  // Duración de la animación completa
-      vsync: this,
-    )..repeat();  // Repetir la animación de forma continua
-
-    // Usar una animación lineal de desplazamiento vertical (y)
-    _animation = Tween<double>(begin: -45, end: -90).animate(_controller);
-  }
+  late final Animation<double> _animation = Tween<double>(begin: -45, end: -90).animate(_controller);
 
   @override
   void dispose() {
@@ -50,44 +40,11 @@ class AnimatedCoronaLogoState extends State<AnimatedCoronaLogo> with SingleTicke
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            _buildLetter('c.svg'), // Letra C
-            const SizedBox(width: 10), // Padding entre las letras
-            _buildLetter('o.svg'), // Primera O estática
-            const SizedBox(width: 10), // Padding entre las letras
-            _buildLetter('r.svg'), // Letra R
-            const SizedBox(width: 10), // Padding entre las letras
-
-            // ClipRect para contener la animación de las "O"
-            ClipRect(
-              child: SizedBox(
-                height: widget.size * 0.15,  // Ajustar el tamaño según la propiedad size
-                width: widget.size * 0.15,
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    AnimatedBuilder(
-                      animation: _animation,
-                      builder: (context, child) {
-                        return Transform.translate(
-                          offset: Offset(0, _animation.value),  // Desplazar verticalmente
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.start,
-                            children: [
-                              _buildLetter('o.svg'),  // O superior
-                              _buildLetter('o.svg'),  // O media
-                              _buildLetter('o.svg'),  // O inferior
-                            ],
-                          ),
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(width: 10), // Padding entre las letras
+            ..._buildStaticLetters(['c.svg', 'o.svg', 'r.svg']), // Letras C, O, R
+            _buildAnimatedO(), // O animada
+            const SizedBox(width: 10), // Padding entre letras
             _buildLetter('n.svg'),  // Letra N
-            const SizedBox(width: 10), // Padding entre las letras
+            const SizedBox(width: 10), // Padding entre letras
             _buildLetter('a.svg'),  // Letra A
             Padding(
               padding: const EdgeInsets.only(bottom: 0),
@@ -99,12 +56,44 @@ class AnimatedCoronaLogoState extends State<AnimatedCoronaLogo> with SingleTicke
     );
   }
 
-  // Función para construir cada letra, ajustando el color
+  // Método para construir las letras estáticas
+  List<Widget> _buildStaticLetters(List<String> letters) {
+    return letters
+        .expand((letter) => [ 
+          _buildLetter(letter), 
+          const SizedBox(width: 10) // Espaciado entre letras
+        ])
+        .toList();
+  }
+
+  // Método para construir la animación de la letra "O"
+  Widget _buildAnimatedO() {
+    return ClipRect(
+      child: SizedBox(
+        height: widget.size * 0.15,
+        width: widget.size * 0.15,
+        child: AnimatedBuilder(
+          animation: _animation,
+          builder: (context, child) {
+            return Transform.translate(
+              offset: Offset(0, _animation.value), // Desplazar verticalmente
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.start,
+                children: List.generate(3, (_) => _buildLetter('o.svg')),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  // Función para construir cada letra
   Widget _buildLetter(String assetName, {double? height}) {
     return SvgPicture.asset(
       'assets/svg/$assetName',
-      height: height ?? widget.size * 0.15,  // Ajustar la altura de la letra
-      colorFilter: ColorFilter.mode(widget.color, BlendMode.srcIn),  // Usar colorFilter en vez de color
+      height: height ?? widget.size * 0.15, // Ajustar la altura de la letra
+      colorFilter: ColorFilter.mode(widget.color, BlendMode.srcIn), // Usar colorFilter para ajustar el color
     );
   }
 }

@@ -1,9 +1,10 @@
+import 'package:backstore/screens/home_screen.dart';
+import 'package:backstore/services/graphql_service.dart';
+import 'package:backstore/utils/custom_colors.dart';
 import 'package:backstore/widgets/static_logo.dart';
 import 'package:flutter/material.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../utils/custom_colors.dart';
-import '../screens/home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -13,28 +14,20 @@ class LoginScreen extends StatefulWidget {
 }
 
 class LoginScreenState extends State<LoginScreen> {
-  final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _passwordController = TextEditingController();
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
   bool _isButtonEnabled = false;
   bool _isPasswordVisible = false;
 
   @override
   void initState() {
     super.initState();
-    _emailController.addListener(_validateFields);
-    _passwordController.addListener(_validateFields);
+    [_emailController, _passwordController].forEach((controller) => controller.addListener(_validateFields));
   }
 
-  void _validateFields() {
-    setState(() {
-      _isButtonEnabled = _emailController.text.isNotEmpty && _passwordController.text.isNotEmpty;
-    });
-  }
+  void _validateFields() => setState(() => _isButtonEnabled = _emailController.text.isNotEmpty && _passwordController.text.isNotEmpty);
 
   Future<void> _login() async {
-    String email = _emailController.text;
-    String password = _passwordController.text;
-
     const loginMutation = '''
       mutation login(\$loginInput: LoginInput!) {
         login(loginInput: \$loginInput) {
@@ -50,53 +43,54 @@ class LoginScreenState extends State<LoginScreen> {
 
     final variables = {
       "loginInput": {
-        "email": email,
-        "password": password,
+        "email": _emailController.text,
+        "password": _passwordController.text,
       },
     };
 
-    final client = GraphQLProvider.of(context).value;
-    final result = await client.mutate(
-      MutationOptions(
-        document: gql(loginMutation),
-        variables: variables,
-      ),
-    );
+    try {
+      final result = await GraphQLService.client.value.mutate(
+        MutationOptions(
+          document: gql(loginMutation),
+          variables: variables,
+          fetchPolicy: FetchPolicy.noCache,
+        ),
+      );
 
-    if (result.hasException) {
-      _showSnackBar('Error al iniciar sesión, intenta de nuevo', Colors.red);
-    } else {
-      final data = result.data?['login'];
-      if (data != null) {
-        final roles = List<String>.from(data['roles']);
-        if (roles.contains('Picker')) {
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.setString('accessToken', data['accessToken']);
-          await prefs.setString('email', data['email']);
-          await prefs.setString('firstName', data['firstName']);
-          await prefs.setString('lastName', data['lastName']);
-          await prefs.setStringList('roles', roles);
-          await prefs.setString('idSucursal', data['idSucursal']);
-
+      if (result.hasException) {
+        _showSnackBar('Error al iniciar sesión, intenta de nuevo', Colors.red);
+      } else {
+        final data = result.data?['login'];
+        if (data != null && List<String>.from(data['roles']).contains('Picker')) {
+          await _storeUserData(data);
           _showSnackBar('Inicio de sesión exitoso', Colors.green);
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (context) => const HomeScreen()),
-          );
+          await Future.delayed(const Duration(seconds: 1)); // Esperar para que se vea el mensaje
+          _navigateToHome();
         } else {
           _showSnackBar('No tienes permisos para acceder', Colors.red);
         }
       }
+    } catch (e) {
+      _showSnackBar('Ocurrió un error inesperado. Intenta de nuevo', Colors.red);
     }
   }
 
-  void _showSnackBar(String message, Color color) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        backgroundColor: color,
-        content: Text(message),
-      ),
-    );
+  Future<void> _storeUserData(Map<String, dynamic> data) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('accessToken', data['accessToken']);
+    await prefs.setString('email', data['email']);
+    await prefs.setString('firstName', data['firstName']);
+    await prefs.setString('lastName', data['lastName']);
+    await prefs.setStringList('roles', List<String>.from(data['roles']));
+    await prefs.setString('idSucursal', data['idSucursal']);
+
+    // Asegurarse de que el token esté disponible antes de proceder
+    await prefs.reload();
   }
+
+  void _navigateToHome() => Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => const HomeScreen()));
+
+  void _showSnackBar(String message, Color color) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(backgroundColor: color, content: Text(message)));
 
   @override
   Widget build(BuildContext context) {
@@ -114,11 +108,7 @@ class LoginScreenState extends State<LoginScreen> {
             const Text(
               'BACKSTORE\nMÓVIL',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: CustomColors.purple,
-              ),
+              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: CustomColors.purple),
             ),
             const SizedBox(height: 80),
             _buildForm(),
@@ -132,56 +122,48 @@ class LoginScreenState extends State<LoginScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        TextField(
-          controller: _emailController,
-          decoration: const InputDecoration(
-            labelText: 'Email',
-            hintText: 'usuario@dominio.cl',
-            border: OutlineInputBorder(),
-            focusedBorder: OutlineInputBorder(
-              borderSide: BorderSide(color: CustomColors.purple),
-            ),
-          ),
-        ),
+        _buildTextField(_emailController, 'Email', 'Ingresa tu email'),
         const SizedBox(height: 20),
-        TextField(
-          controller: _passwordController,
-          obscureText: !_isPasswordVisible,
-          decoration: InputDecoration(
-            labelText: 'Contraseña',
-            border: const OutlineInputBorder(),
-            focusedBorder: const OutlineInputBorder(
-              borderSide: BorderSide(color: CustomColors.purple),
-            ),
-            suffixIcon: IconButton(
-              icon: Icon(
-                _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
-                color: CustomColors.black,
-              ),
-              onPressed: () {
-                setState(() {
-                  _isPasswordVisible = !_isPasswordVisible;
-                });
-              },
-            ),
-          ),
-        ),
+        _buildPasswordField(),
         const SizedBox(height: 30),
         ElevatedButton(
           onPressed: _isButtonEnabled ? _login : null,
           style: ElevatedButton.styleFrom(
             backgroundColor: CustomColors.purple,
             padding: const EdgeInsets.symmetric(vertical: 20),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
-            ),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           ),
-          child: const Text(
-            'Ingresar',
-            style: TextStyle(color: CustomColors.white),
-          ),
+          child: const Text('Ingresar', style: TextStyle(color: CustomColors.white)),
         ),
       ],
+    );
+  }
+
+  TextField _buildTextField(TextEditingController controller, String label, String hint) {
+    return TextField(
+      controller: controller,
+      decoration: InputDecoration(
+        labelText: label,
+        hintText: hint,
+        border: const OutlineInputBorder(),
+        focusedBorder: const OutlineInputBorder(borderSide: BorderSide(color: CustomColors.purple)),
+      ),
+    );
+  }
+
+  TextField _buildPasswordField() {
+    return TextField(
+      controller: _passwordController,
+      obscureText: !_isPasswordVisible,
+      decoration: InputDecoration(
+        labelText: 'Contraseña',
+        border: const OutlineInputBorder(),
+        focusedBorder: const OutlineInputBorder(borderSide: BorderSide(color: CustomColors.purple)),
+        suffixIcon: IconButton(
+          icon: Icon(_isPasswordVisible ? Icons.visibility : Icons.visibility_off, color: CustomColors.black),
+          onPressed: () => setState(() => _isPasswordVisible = !_isPasswordVisible),
+        ),
+      ),
     );
   }
 

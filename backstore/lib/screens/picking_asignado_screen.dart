@@ -1,8 +1,9 @@
+import 'package:backstore/utils/custom_colors.dart';
+import 'package:backstore/widgets/static_logo.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert'; // Para manejar la conversión JSON
-import '../utils/custom_colors.dart';
-import '../widgets/static_logo.dart';
+import 'package:intl/intl.dart'; // Importar para formatear la fecha
 import 'order_detail_screen.dart'; // Importa la pantalla de detalle de la orden
 
 class PickingAsignadoScreen extends StatefulWidget {
@@ -13,23 +14,61 @@ class PickingAsignadoScreen extends StatefulWidget {
 }
 
 class _PickingAsignadoScreenState extends State<PickingAsignadoScreen> {
-  bool _isExpandedPending = true; // Inicialmente expandida
-  bool _isExpandedCompleted = false; // Expandida finalizados
+  bool _isExpandedPending = false;
+  bool _isExpandedCompleted = false;
+  bool _isExpandedQuiebres = false;
 
   List<Map<String, dynamic>> _pickingData = [];
+  List<Map<String, dynamic>> _completedData = [];
+  List<Map<String, dynamic>> _quiebresData = [];
 
   @override
   void initState() {
     super.initState();
-    _loadPendingOrders(); // Carga las órdenes pendientes sincronizadas
+    _loadOrdersData(); // Cargar todos los datos
+    _loadQuiebresData(); // Cargar los datos de quiebres sincronizados
   }
 
-  Future<void> _loadPendingOrders() async {
+  Future<void> _loadOrdersData() async {
     final prefs = await SharedPreferences.getInstance();
     final String? ordersJson = prefs.getString('orders');
     if (ordersJson != null) {
+      List<Map<String, dynamic>> allOrders = List<Map<String, dynamic>>.from(json.decode(ordersJson));
+
       setState(() {
-        _pickingData = List<Map<String, dynamic>>.from(json.decode(ordersJson));
+        _pickingData = allOrders.where((order) {
+          return order['orderBackstoreStatus'] == null && order['orderBackstoreStatusDate'] == null;
+        }).toList();
+
+        _completedData = allOrders.where((order) {
+          return order['orderBackstoreStatus'] != null && order['orderBackstoreStatusDate'] != null;
+        }).toList();
+      });
+    }
+  }
+
+  Future<void> _loadQuiebresData() async {
+    final prefs = await SharedPreferences.getInstance();
+    final String? quiebresJson = prefs.getString('quiebres');
+    if (quiebresJson != null) {
+      setState(() {
+        _quiebresData = List<Map<String, dynamic>>.from(json.decode(quiebresJson));
+
+        // Transformar los datos para que sean compatibles con la estructura esperada
+        _quiebresData = _quiebresData.map((order) {
+          final int totalQuantity = order['items']
+              ?.fold(0, (sum, item) => sum + (item['quantity'] ?? 0)) ?? 0;
+          final int totalConfirmed = order['items']
+              ?.fold(0, (sum, item) => sum + (item['quantityConfirmedBackstore'] ?? 0)) ?? 0;
+          final String formattedDate = DateFormat('dd/MM/yyyy').format(DateTime.parse(order['orderBackstoreStatusDate']));
+
+          return {
+            'tipo': order['orderBackstoreStatus'] ?? 'Sin información',
+            'nroOrden': order['externalOrderId'] ?? 'Sin información',
+            'quiebre': formattedDate,
+            'cantidad': '$totalConfirmed/$totalQuantity',
+          };
+        }).toList();
       });
     }
   }
@@ -54,7 +93,8 @@ class _PickingAsignadoScreenState extends State<PickingAsignadoScreen> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.account_circle, color: CustomColors.lightGray),
+            icon:
+                const Icon(Icons.account_circle, color: CustomColors.lightGray),
             onPressed: () {
               // Acción para el icono de perfil
             },
@@ -76,31 +116,59 @@ class _PickingAsignadoScreenState extends State<PickingAsignadoScreen> {
               ),
             ),
             const SizedBox(height: 20),
-            _buildExpandableTile('PENDIENTES', _isExpandedPending, () {
-              setState(() {
-                _isExpandedPending = !_isExpandedPending;
-                if (_isExpandedPending) {
+            _buildExpandableTile(
+              title: 'PENDIENTES',
+              isExpanded: _isExpandedPending,
+              onExpansionChanged: (bool expanded) {
+                setState(() {
+                  _isExpandedPending = expanded;
                   _isExpandedCompleted = false;
-                }
-              });
-            }),
+                  _isExpandedQuiebres = false;
+                });
+              },
+              content: _buildPickingCardList(),
+            ),
             const SizedBox(height: 10),
-            _buildExpandableTile('FINALIZADOS', _isExpandedCompleted, () {
-              setState(() {
-                _isExpandedCompleted = !_isExpandedCompleted;
-                if (_isExpandedCompleted) {
+            _buildExpandableTile(
+              title: 'FINALIZADOS',
+              isExpanded: _isExpandedCompleted,
+              onExpansionChanged: (bool expanded) {
+                setState(() {
+                  _isExpandedCompleted = expanded;
                   _isExpandedPending = false;
+                  _isExpandedQuiebres = false;
+                });
+              },
+              content: _buildCompletedList(),
+            ),
+            const SizedBox(height: 10),
+            _buildExpandableTile(
+              title: 'QUIEBRES',
+              isExpanded: _isExpandedQuiebres,
+              onExpansionChanged: (bool expanded) {
+                setState(() {
+                  _isExpandedQuiebres = expanded;
+                  _isExpandedPending = false;
+                  _isExpandedCompleted = false;
+                });
+                if (expanded) {
+                  _loadQuiebresData(); // Cargar datos de quiebres solo cuando se expanda
                 }
-              });
-            }),
+              },
+              content: _buildQuiebresTable(),
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildExpandableTile(
-      String title, bool isExpanded, VoidCallback onExpansionChanged) {
+  Widget _buildExpandableTile({
+    required String title,
+    required bool isExpanded,
+    required Function(bool) onExpansionChanged,
+    required Widget content,
+  }) {
     return ExpansionTile(
       title: Text(
         title,
@@ -115,18 +183,11 @@ class _PickingAsignadoScreenState extends State<PickingAsignadoScreen> {
         color: CustomColors.purple,
       ),
       initiallyExpanded: isExpanded,
-      onExpansionChanged: (expanded) {
-        // Evitar que se cierre inmediatamente después de abrir
-        onExpansionChanged();
-      },
-      children: <Widget>[
-        if (title == 'PENDIENTES' && isExpanded) _buildPickingCardList(),
-        if (title == 'FINALIZADOS' && isExpanded) _buildFinalizedList(),
-      ],
+      onExpansionChanged: onExpansionChanged,
+      children: <Widget>[content],
     );
   }
 
-  // Función para mostrar la lista de picking
   Widget _buildPickingCardList() {
     if (_pickingData.isEmpty) {
       return const Padding(
@@ -140,36 +201,130 @@ class _PickingAsignadoScreenState extends State<PickingAsignadoScreen> {
     }
     return Column(
       children: _pickingData.map((data) {
+        String formattedCreationDate = DateFormat('dd/MM/yyyy').format(DateTime.parse(data['creationDate']));
         return GestureDetector(
           onTap: () => _navigateToOrderDetail(data),
           child: _buildPickingCard(
             color: Colors.red, // Cambiar según prioridad si es necesario
             text: '${data['externalOrderId']}',
-            pickingInfo: 'Fecha de creación: ${data['creationDate']}',
+            pickingInfo: 'Fecha de creación: $formattedCreationDate',
           ),
         );
       }).toList(),
     );
   }
 
-  // Navega a la pantalla de detalles de la orden
+  Widget _buildQuiebresTable() {
+    if (_quiebresData.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.all(10.0),
+        child: Text(
+          'No hay quiebres registrados.',
+          textAlign: TextAlign.center,
+          style: TextStyle(fontSize: 14),
+        ),
+      );
+    }
+    return DataTable(
+      columnSpacing: 5,
+      columns: const [
+        DataColumn(
+          label: Text(
+            'Tipo',
+            style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+          ),
+        ),
+        DataColumn(
+          label: Text(
+            'Nro. Orden',
+            style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+          ),
+        ),
+        DataColumn(
+          label: Text(
+            'Quiebre',
+            style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+          ),
+        ),
+        DataColumn(
+          label: Text(
+            'Cantidad',
+            style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold),
+          ),
+        ),
+      ],
+      rows: _quiebresData.map((quiebre) {
+        return DataRow(
+          cells: [
+            DataCell(Text(quiebre['tipo'] ?? 'Sin información',
+                style: const TextStyle(fontSize: 14))),
+            DataCell(Text(quiebre['nroOrden'] ?? 'Sin información',
+                style: const TextStyle(fontSize: 14))),
+            DataCell(Text(quiebre['quiebre'] ?? 'Sin información',
+                style: const TextStyle(fontSize: 14))),
+            DataCell(Text(quiebre['cantidad'] ?? '0/0',
+                style: const TextStyle(fontSize: 14))),
+          ],
+        );
+      }).toList(),
+    );
+  }
+
+  Widget _buildCompletedList() {
+    if (_completedData.isEmpty) {
+      return const Padding(
+        padding: EdgeInsets.all(10.0),
+        child: Text(
+          'No hay órdenes finalizadas.',
+          textAlign: TextAlign.center,
+          style: TextStyle(fontSize: 14),
+        ),
+      );
+    }
+    return DataTable(
+      columnSpacing: 5,
+      columns: const [
+        DataColumn(
+          label: Text('Estado', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+        ),
+        DataColumn(
+          label: Text('Nro. Orden', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+        ),
+        DataColumn(
+          label: Text('Picking', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+        ),
+        DataColumn(
+          label: Text('Creado', style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+        ),
+      ],
+      rows: _completedData.map((order) {
+        String formattedCreationDate = DateFormat('dd/MM/yyyy').format(DateTime.parse(order['creationDate']));
+        String formattedStatusDate = DateFormat('dd/MM/yyyy').format(DateTime.parse(order['orderBackstoreStatusDate']));
+        return DataRow(
+          cells: [
+            DataCell(Container(
+              width: 10,
+              height: 10,
+              color: Colors.red, // Puedes cambiar este color según el estado de la orden
+            )),
+            DataCell(Text(order['externalOrderId'], style: const TextStyle(fontSize: 14))),
+            DataCell(Text(formattedCreationDate, style: const TextStyle(fontSize: 14))),
+            DataCell(Text(formattedStatusDate, style: const TextStyle(fontSize: 14))),
+          ],
+        );
+      }).toList(),
+    );
+  }
+
   void _navigateToOrderDetail(Map<String, dynamic> orderData) {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => OrderDetailScreen(order: orderData), // Cambiado 'orderData' al parámetro 'order'
-      ),
-    );
-  }
-
-  // Función para mostrar la lista de finalizados (en este ejemplo, se deja vacío)
-  Widget _buildFinalizedList() {
-    return const Padding(
-      padding: EdgeInsets.all(10.0),
-      child: Text(
-        'No hay órdenes finalizadas.',
-        textAlign: TextAlign.center,
-        style: TextStyle(fontSize: 14),
+        builder: (context) => OrderDetailScreen(
+          order: orderData,
+          pickingData: _pickingData,
+          completedData: _completedData,
+        ),
       ),
     );
   }

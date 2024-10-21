@@ -9,44 +9,39 @@ class CustomDrawer extends StatelessWidget {
     return Drawer(
       child: Container(
         color: CustomColors.white,
-        width: MediaQuery.of(context).size.width * 0.75,
-        height: MediaQuery.of(context).size.height,
         child: ListView(
           padding: EdgeInsets.zero,
-          children: const <Widget>[
-            DrawerHeader(
+          children: [
+            const DrawerHeader(
               decoration: BoxDecoration(color: CustomColors.white),
-              child: Text(
-                'MENÚ',
-                style: TextStyle(color: CustomColors.black, fontSize: 24),
-              ),
+              child: Text('MENÚ', style: TextStyle(color: CustomColors.black, fontSize: 24)),
             ),
-            ExpansionTile(
-              title: Text('SINCRONIZAR', style: TextStyle(color: CustomColors.black)),
-              children: [
-                ListTile(title: Text('Enviar/Recibir', style: TextStyle(color: CustomColors.black))),
-              ],
-            ),
-            ExpansionTile(
-              title: Text('PICKING ASIGNADO', style: TextStyle(color: CustomColors.black)),
-              children: [
-                ListTile(title: Text('Pendientes', style: TextStyle(color: CustomColors.black))),
-                ListTile(title: Text('Finalizados', style: TextStyle(color: CustomColors.black))),
-              ],
-            ),
-            ExpansionTile(
-              title: Text('CONSOLIDADO RECOLECCIÓN', style: TextStyle(color: CustomColors.black)),
-              children: [
-                ListTile(title: Text('Seleccionar Ordenes', style: TextStyle(color: CustomColors.black))),
-                ListTile(title: Text('Recolectar', style: TextStyle(color: CustomColors.black))),
-              ],
-            ),
-            ListTile(
-              title: Text('CONSULTAR STOCK', style: TextStyle(color: CustomColors.black)),
-            ),
+            ..._buildMenuItems(),
           ],
         ),
       ),
+    );
+  }
+
+  List<Widget> _buildMenuItems() {
+    return [
+      _buildExpansionTile('SINCRONIZAR', ['Historial', 'Enviar/Recibir']),
+      _buildExpansionTile('PICKING ASIGNADO', ['Pendientes', 'Finalizados', 'Quiebres']),
+      _buildExpansionTile('CONSOLIDADO RECOLECCIÓN', ['Seleccionar Ordenes', 'Recolectar']),
+      _buildListTile('CONSULTAR STOCK'),
+    ];
+  }
+
+  ExpansionTile _buildExpansionTile(String title, List<String> children) {
+    return ExpansionTile(
+      title: Text(title, style: const TextStyle(color: CustomColors.black)),
+      children: children.map((child) => _buildListTile(child)).toList(),
+    );
+  }
+
+  ListTile _buildListTile(String title) {
+    return ListTile(
+      title: Text(title, style: const TextStyle(color: CustomColors.black)),
     );
   }
 }

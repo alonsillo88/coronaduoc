@@ -1,9 +1,10 @@
+import 'package:backstore/utils/custom_colors.dart';
+import 'package:backstore/widgets/static_logo.dart';
 import 'package:flutter/material.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'dart:convert'; // Para manejar la conversión JSON
-import '../utils/custom_colors.dart';
-import '../widgets/static_logo.dart';
+import 'dart:convert';
+import 'historial_screen.dart';
 
 class SyncScreen extends StatefulWidget {
   const SyncScreen({super.key});
@@ -14,41 +15,125 @@ class SyncScreen extends StatefulWidget {
 
 class _SyncScreenState extends State<SyncScreen> {
   bool _isLoading = false;
-  List<Map<String, dynamic>> _orders = [];
+  List<Map<String, dynamic>> _pendingOrders = [];
+  List<Map<String, dynamic>> _completedOrders = [];
+  List<Map<String, dynamic>> _quiebres = [];
+  List<Map<String, dynamic>> _sentRecords = [];
 
   @override
   void initState() {
     super.initState();
-    _loadLocalOrders(); // Carga las órdenes ya almacenadas al iniciar la pantalla
+    _loadLocalOrders();
   }
 
   Future<void> _loadLocalOrders() async {
     final prefs = await SharedPreferences.getInstance();
     final String? ordersJson = prefs.getString('orders');
+    final String? sentRecordsJson = prefs.getString('sentRecords');
+    final String? quiebresJson = prefs.getString('quiebres');
     if (ordersJson != null) {
+      List<Map<String, dynamic>> allOrders = List<Map<String, dynamic>>.from(json.decode(ordersJson));
+
       setState(() {
-        _orders = List<Map<String, dynamic>>.from(json.decode(ordersJson));
+        _pendingOrders = allOrders.where((order) => order['orderBackstoreStatus'] == null && order['orderBackstoreStatusDate'] == null).toList();
+        _completedOrders = allOrders.where((order) => order['orderBackstoreStatus'] != null && order['orderBackstoreStatusDate'] != null).toList();
+      });
+    }
+    if (sentRecordsJson != null) {
+      setState(() {
+        _sentRecords = List<Map<String, dynamic>>.from(json.decode(sentRecordsJson));
+      });
+    }
+    if (quiebresJson != null) {
+      setState(() {
+        _quiebres = List<Map<String, dynamic>>.from(json.decode(quiebresJson));
       });
     }
   }
 
-  Future<void> _fetchOrders() async {
+  Future<void> _syncOrders() async {
     setState(() {
       _isLoading = true;
     });
 
-    final prefs = await SharedPreferences.getInstance();
-    final email = prefs.getString('email');
-    final accessToken = prefs.getString('accessToken');
-
-    if (email == null || accessToken == null) {
-      _showSnackBar('Error: No se encontró el correo o token del usuario', Colors.red);
+    // 1. Enviar órdenes completadas al backend antes de recibir la data actualizada.
+    if (_completedOrders.isNotEmpty) {
+      for (var order in _completedOrders) {
+        await _updateOrderInBackend(order);
+      }
       setState(() {
-        _isLoading = false;
+        _sentRecords.addAll(_completedOrders);
+        _completedOrders.clear();
       });
-      return;
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('orders', json.encode(_pendingOrders));
+      await prefs.setString('sentRecords', json.encode(_sentRecords));
     }
 
+    // 2. Limpiar caché.
+    GraphQLProvider.of(context).value.cache.store.reset();
+
+    // 3. Obtener las órdenes actualizadas del backend.
+    await _fetchOrdersFromBackend();
+
+    setState(() {
+      _isLoading = false;
+    });
+  }
+
+  Future<void> _updateOrderInBackend(Map<String, dynamic> order) async {
+    const updateOrderMutation = '''
+      mutation updateOrderForPicking(\$updateOrderInput: UpdateOrderInput!) {
+        updateOrderForPicking(updateOrderInput: \$updateOrderInput) {
+          externalOrderId
+        }
+      }
+    ''';
+
+    final variables = {
+      "updateOrderInput": {
+        "externalOrderId": order['externalOrderId'],
+        "items": order['items'].map((item) {
+          return {
+            "productId": item['productId'],
+            "quantityBackstoreConfirmados": item['quantityConfirmedBackstore'] ?? 0,
+            "breakReason": item['breakReason'] ?? ""
+          };
+        }).toList(),
+        "orderStatusBackstore": order['orderBackstoreStatus']
+      }
+    };
+
+    final prefs = await SharedPreferences.getInstance();
+    final accessToken = prefs.getString('accessToken');
+
+    try {
+      final client = GraphQLProvider.of(context).value;
+      final result = await client.mutate(
+        MutationOptions(
+          document: gql(updateOrderMutation),
+          variables: variables,
+          context: Context().withEntry(
+            HttpLinkHeaders(
+              headers: {
+                'Authorization': 'Bearer $accessToken',
+              },
+            ),
+          ),
+        ),
+      );
+
+      if (result.hasException) {
+        _showSnackBar('Error al actualizar la orden: ${result.exception.toString()}', Colors.red);
+      } else {
+        _showSnackBar('Orden actualizada exitosamente', Colors.green);
+      }
+    } catch (e) {
+      _showSnackBar('Error inesperado al actualizar la orden: $e', Colors.red);
+    }
+  }
+
+  Future<void> _fetchOrdersFromBackend() async {
     const queryOrders = '''
       query getOrders(\$filter: OrderFilterInput!) {
         getOrders(filter: \$filter) {
@@ -66,6 +151,7 @@ class _SyncScreenState extends State<SyncScreen> {
             size
           }
           orderBackstoreStatus
+          orderBackstoreStatusDate
           assignment {
             assignedTo
             assignmentDate
@@ -74,6 +160,15 @@ class _SyncScreenState extends State<SyncScreen> {
         }
       }
     ''';
+
+    final prefs = await SharedPreferences.getInstance();
+    final email = prefs.getString('email');
+    final accessToken = prefs.getString('accessToken');
+
+    if (email == null || accessToken == null) {
+      _showSnackBar('Error: No se encontró el correo o token del usuario', Colors.red);
+      return;
+    }
 
     final variables = {
       "filter": {
@@ -90,7 +185,7 @@ class _SyncScreenState extends State<SyncScreen> {
           context: Context().withEntry(
             HttpLinkHeaders(
               headers: {
-                'Authorization': 'Bearer $accessToken', // Agregar el token al header
+                'Authorization': 'Bearer $accessToken',
               },
             ),
           ),
@@ -103,39 +198,34 @@ class _SyncScreenState extends State<SyncScreen> {
         final data = result.data?['getOrders'] ?? [];
         final newOrders = List<Map<String, dynamic>>.from(data);
 
-        // Filtra solo las órdenes que no existen en las ya almacenadas
-        final existingOrderIds = _orders.map((order) => order['externalOrderId']).toSet();
-        final ordersToAdd = newOrders.where((order) => !existingOrderIds.contains(order['externalOrderId'])).toList();
+        // Filtrar órdenes y asegurarse de que no haya duplicados de externalOrderId
+        final existingOrderIds = <String>{};
+        existingOrderIds.addAll(_pendingOrders.map((order) => order['externalOrderId']));
+        existingOrderIds.addAll(_quiebres.map((order) => order['externalOrderId']));
 
-        if (ordersToAdd.isNotEmpty) {
-          setState(() {
-            _orders.addAll(ordersToAdd);
-          });
+        final newPendingOrders = newOrders.where((order) =>
+            !existingOrderIds.contains(order['externalOrderId']) &&
+            order['orderBackstoreStatus'] == null &&
+            order['orderBackstoreStatusDate'] == null).toList();
 
-          // Almacena las órdenes actualizadas localmente
-          await prefs.setString('orders', json.encode(_orders));
+        final newQuiebres = newOrders.where((order) =>
+            !existingOrderIds.contains(order['externalOrderId']) &&
+            order['orderBackstoreStatus'] != null &&
+            order['orderBackstoreStatusDate'] != null).toList();
 
-          _showSnackBar('Órdenes sincronizadas exitosamente', Colors.green);
-        } else {
-          _showSnackBar('No hay nuevas órdenes para sincronizar', Colors.orange);
-        }
+        setState(() {
+          _pendingOrders.addAll(newPendingOrders);
+          _quiebres.addAll(newQuiebres);
+        });
+
+        await prefs.setString('orders', json.encode(_pendingOrders + _completedOrders));
+        await prefs.setString('quiebres', json.encode(_quiebres));
+
+        _showSnackBar('Órdenes sincronizadas exitosamente', Colors.green);
       }
     } catch (e) {
-      _showSnackBar('Error inesperado al sincronizar', Colors.red);
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
+      _showSnackBar('Error inesperado al sincronizar: $e', Colors.red);
     }
-  }
-
-  void _deleteOrder(int index) async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _orders.removeAt(index);
-    });
-    await prefs.setString('orders', json.encode(_orders));
-    _showSnackBar('Orden eliminada', Colors.red);
   }
 
   void _showSnackBar(String message, Color color) {
@@ -155,9 +245,7 @@ class _SyncScreenState extends State<SyncScreen> {
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: CustomColors.black),
-          onPressed: () {
-            Navigator.pop(context); // Regresa a la pantalla anterior
-          },
+          onPressed: () => Navigator.pop(context),
         ),
         title: const Center(
           child: StaticCoronaLogo(
@@ -168,9 +256,7 @@ class _SyncScreenState extends State<SyncScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.account_circle, color: CustomColors.lightGray),
-            onPressed: () {
-              // Acción para el icono de perfil
-            },
+            onPressed: () {},
           ),
         ],
       ),
@@ -188,33 +274,48 @@ class _SyncScreenState extends State<SyncScreen> {
                 color: CustomColors.black,
               ),
             ),
-            const Spacer(),
-            ElevatedButton(
-              onPressed: _isLoading ? null : _fetchOrders,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: CustomColors.purple,
-                padding: const EdgeInsets.symmetric(vertical: 20),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              child: const Text(
-                'ENVIAR/RECIBIR',
-                style: TextStyle(
-                  color: CustomColors.white,
-                  fontSize: 16,
-                ),
-              ),
-            ),
             const SizedBox(height: 20),
+            ...[
+              {
+                'text': 'HISTORIAL',
+                'onPressed': () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(builder: (context) => const HistorialScreen()),
+                  );
+                },
+              },
+              {
+                'text': 'ENVIAR/RECIBIR',
+                'onPressed': _isLoading ? null : _syncOrders,
+              },
+            ]
+                .map(
+                  (data) => Padding(
+                    padding: const EdgeInsets.only(bottom: 20.0),
+                    child: ElevatedButton(
+                      onPressed: data['onPressed'] as VoidCallback?,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: CustomColors.purple,
+                        padding: const EdgeInsets.symmetric(vertical: 20),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                        minimumSize: const Size(double.infinity, 50),
+                      ),
+                      child: Text(
+                        data['text'] as String,
+                        style: const TextStyle(color: CustomColors.white, fontSize: 16),
+                      ),
+                    ),
+                  ),
+                )
+                .toList(),
             if (_isLoading)
               const Center(child: CircularProgressIndicator()),
-            if (!_isLoading && _orders.isNotEmpty)
+            if (!_isLoading && _pendingOrders.isNotEmpty)
               Expanded(
                 child: ListView.builder(
-                  itemCount: _orders.length,
+                  itemCount: _pendingOrders.length,
                   itemBuilder: (context, index) {
-                    final order = _orders[index];
+                    final order = _pendingOrders[index];
                     return Card(
                       child: ListTile(
                         title: Text(order['externalOrderId']),
@@ -228,9 +329,19 @@ class _SyncScreenState extends State<SyncScreen> {
                   },
                 ),
               ),
+            const Spacer(),
           ],
         ),
       ),
     );
+  }
+
+  void _deleteOrder(int index) async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _pendingOrders.removeAt(index);
+    });
+    await prefs.setString('orders', json.encode(_pendingOrders + _completedOrders));
+    _showSnackBar('Orden eliminada', Colors.red);
   }
 }

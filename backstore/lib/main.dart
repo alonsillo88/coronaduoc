@@ -1,26 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
+import 'services/graphql_service.dart';
 import 'screens/loading_screen.dart';
 import 'screens/login_screen.dart';
+import 'screens/home_screen.dart';
 import 'utils/custom_colors.dart';
 
 void main() async {
-  await initHiveForFlutter();
-
-  final HttpLink httpLink = HttpLink(
-    'http://localhost:3000/backstore',
-  );
-
-  ValueNotifier<GraphQLClient> client = ValueNotifier(
-    GraphQLClient(
-      link: httpLink,
-      cache: GraphQLCache(store: HiveStore()),
-    ),
-  );
+  WidgetsFlutterBinding.ensureInitialized();
+  await GraphQLService.initialize();
 
   runApp(
     GraphQLProvider(
-      client: client,
+      client: GraphQLService.client,
       child: const BackstoreApp(),
     ),
   );
@@ -35,29 +27,24 @@ class BackstoreApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       title: 'Backstore',
       theme: _buildTheme(),
-      home: const LoadingScreen(), // Pantalla de inicio
+      initialRoute: '/',
       routes: {
-        '/login': (context) => const LoginScreen(), // Ruta para el LoginScreen
+        '/': (_) => const LoadingScreen(),
+        '/login': (_) => const LoginScreen(),
+        '/home': (_) => const HomeScreen(),
       },
     );
   }
 
   ThemeData _buildTheme() {
     return ThemeData(
-      colorScheme: ColorScheme.fromSeed(
-        seedColor: CustomColors.purple, // Color principal basado en "purple"
-      ),
-      scaffoldBackgroundColor: CustomColors.background, // Fondo blanco
-      primaryColor: CustomColors.purple, // Color principal (morado)
+      colorScheme: ColorScheme.fromSeed(seedColor: CustomColors.purple),
+      scaffoldBackgroundColor: CustomColors.background,
+      primaryColor: CustomColors.purple,
       appBarTheme: const AppBarTheme(
-        backgroundColor: CustomColors.background, // Color de fondo del AppBar
-        titleTextStyle: TextStyle(
-          color: CustomColors.black, // Texto en negro
-          fontSize: 20,
-        ),
-        iconTheme: IconThemeData(
-          color: CustomColors.black, // Iconos en negro
-        ),
+        backgroundColor: CustomColors.background,
+        titleTextStyle: TextStyle(color: CustomColors.black, fontSize: 20),
+        iconTheme: IconThemeData(color: CustomColors.black),
       ),
       useMaterial3: true,
     );

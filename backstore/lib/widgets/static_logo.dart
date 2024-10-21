@@ -21,29 +21,27 @@ class StaticCoronaLogo extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.end,
-          children: [
-            _buildLetter('c.svg'), // Letra C
-            const SizedBox(width: 10), // Padding entre las letras
-            _buildLetter('o.svg'), // Primera O estática
-            const SizedBox(width: 10), // Padding entre las letras
-            _buildLetter('r.svg'), // Letra R
-            const SizedBox(width: 10), // Padding entre las letras            
-            _buildLetter('o2.svg'),// Segunda "O" estática
-            const SizedBox(width: 10), // Padding entre las letras
-            _buildLetter('n.svg'),  // Letra N
-            const SizedBox(width: 10), // Padding entre las letras
-            _buildLetter('a.svg'),  // Letra A
-            Padding(
-              padding: const EdgeInsets.only(bottom: 0),
-              child: _buildLetter('registered.svg', height: 5), // Copyright
-            ),
-          ],
+          children: _buildLogoLetters(),
         ),
       ),
     );
   }
 
-  // Función para construir cada letra, ajustando el color
+  List<Widget> _buildLogoLetters() {
+    final letters = ['c.svg', 'o.svg', 'r.svg', 'o2.svg', 'n.svg', 'a.svg'];
+    final widgets = letters
+        .map((letter) => Padding(
+              padding: const EdgeInsets.only(right: 10),
+              child: _buildLetter(letter),
+            ))
+        .toList();
+    widgets.add(Padding(
+      padding: const EdgeInsets.only(bottom: 0),
+      child: _buildLetter('registered.svg', height: 5),
+    ));
+    return widgets;
+  }
+
   Widget _buildLetter(String assetName, {double? height}) {
     return SvgPicture.asset(
       'assets/svg/$assetName',

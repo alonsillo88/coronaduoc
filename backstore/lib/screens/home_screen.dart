@@ -1,9 +1,9 @@
 import 'package:backstore/screens/sync_screen.dart';
-import 'package:backstore/screens/picking_asignado_screen.dart';  // Importa la pantalla PickingAsignadoScreen
+import 'package:backstore/screens/picking_asignado_screen.dart';
 import 'package:flutter/material.dart';
 import '../utils/custom_colors.dart';
-import '../widgets/custom_drawer.dart';  // Importa el menú reutilizable
-import '../widgets/static_logo.dart';   // Importa el logo estático reutilizable
+import '../widgets/custom_drawer.dart';
+import '../widgets/static_logo.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -11,90 +11,75 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: CustomColors.background,  // Fondo blanco
-        elevation: 0,  // Sin sombra en el AppBar
-        leading: Builder(
-          builder: (BuildContext context) {
-            return IconButton(
-              icon: const Icon(Icons.menu, color: CustomColors.black),  // Icono de menú negro
-              onPressed: () {
-                Scaffold.of(context).openDrawer();  // Abre el Drawer
-              },
-            );
-          },
-        ),
-        title: const Center(
-          child: StaticCoronaLogo(
-            size: 125,  // Ajustamos el tamaño del logo
-            color: CustomColors.black,  // Color negro del logo
-          ),
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.account_circle, color: CustomColors.lightGray),  // Icono de perfil
-            onPressed: () {
-              // Acción al presionar el icono de perfil
-            },
-          ),
-        ],
-      ),
-      drawer: const CustomDrawer(),  // Reutiliza el menú lateral
+      appBar: _buildAppBar(),
+      drawer: const CustomDrawer(),
       body: Padding(
-        padding: const EdgeInsets.all(20.0),  // Espaciado alrededor del contenido
-        child: _buildBody(context),
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            ..._buildButtons(context), // Generar los botones de manera dinámica
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildBody(BuildContext context) {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,  // Centra los elementos verticalmente
-      crossAxisAlignment: CrossAxisAlignment.stretch,  // Hace que los botones ocupen todo el ancho
-      children: [
-        _buildButton('SINCRONIZAR', () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const SyncScreen()),
+  AppBar _buildAppBar() {
+    return AppBar(
+      backgroundColor: CustomColors.background,
+      elevation: 0,
+      leading: Builder(
+        builder: (context) {
+          return IconButton(
+            icon: const Icon(Icons.menu, color: CustomColors.black),
+            onPressed: () => Scaffold.of(context).openDrawer(),
           );
-        }),
-        const SizedBox(height: 20),  // Espaciado entre botones
-        _buildButton('PICKING ASIGNADO', () {
-          // Navega a la vista de Picking Asignado
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const PickingAsignadoScreen()),
-          );
-        }),
-        const SizedBox(height: 20),
-        _buildButton('CONSOLIDADO RECOLECCIÓN', () {
-          // Acción para el botón "CONSOLIDADO RECOLECCIÓN"
-        }),
-        const SizedBox(height: 20),
-        _buildButton('CONSULTAR STOCK', () {
-          // Acción para el botón "CONSULTAR STOCK"
-        }),
+        },
+      ),
+      title: const Center(
+        child: StaticCoronaLogo(size: 125, color: CustomColors.black),
+      ),
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.account_circle, color: CustomColors.lightGray),
+          onPressed: () {},
+        ),
       ],
     );
   }
 
-  Widget _buildButton(String text, VoidCallback onPressed) {
-    return ElevatedButton(
-      onPressed: onPressed,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: CustomColors.purple,  // Botones de color morado
-        padding: const EdgeInsets.symmetric(vertical: 20),  // Tamaño del botón
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),  // Bordes redondeados
-        ),
-      ),
-      child: Text(
-        text,
-        style: const TextStyle(
-          color: CustomColors.white,  // Texto blanco
-          fontSize: 16,
-        ),
-      ),
-    );
+  List<Widget> _buildButtons(BuildContext context) {
+    final buttonData = [
+      {'text': 'SINCRONIZAR', 'onPressed': () => _navigateTo(context, const SyncScreen())},
+      {'text': 'PICKING ASIGNADO', 'onPressed': () => _navigateTo(context, const PickingAsignadoScreen())},
+      {'text': 'CONSOLIDADO RECOLECCIÓN', 'onPressed': () {}},
+      {'text': 'CONSULTAR STOCK', 'onPressed': () {}},
+    ];
+
+    return buttonData
+        .map(
+          (data) => Padding(
+            padding: const EdgeInsets.only(bottom: 20.0),
+            child: ElevatedButton(
+              onPressed: data['onPressed'] as VoidCallback,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: CustomColors.purple,
+                padding: const EdgeInsets.symmetric(vertical: 20),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+              ),
+              child: Text(
+                data['text'] as String,
+                style: const TextStyle(color: CustomColors.white, fontSize: 16),
+              ),
+            ),
+          ),
+        )
+        .toList();
+  }
+
+  void _navigateTo(BuildContext context, Widget screen) {
+    Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
   }
 }
