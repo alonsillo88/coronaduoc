@@ -279,7 +279,7 @@ input UpdateOrderInput {
 
 input UpdateItemInput {
   productId: Float!
-  quantityBackstoreConfirmados: Int!
+  quantityBackstoreConfirmados: Float!
   breakReason: String
 }
 
