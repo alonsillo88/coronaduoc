@@ -11,9 +11,12 @@ class GraphQLService {
     final prefs = await SharedPreferences.getInstance();
     final String? accessToken = prefs.getString('accessToken');
 
-    final String backendUrl = Platform.isAndroid
-        ? 'http://10.0.2.2:3000/backstore'
-        : 'http://localhost:3000/backstore';
+    //final String backendUrl = Platform.isAndroid
+      // ? 'http://10.0.2.2:3000/backstore'
+      // : 'http://localhost:3000/backstore';
+
+    const String backendUrl = 'https://backstorebackend-ghcyc2e2hwh6b3hx.brazilsouth-01.azurewebsites.net/backstore';
+
 
     final link = AuthLink(getToken: () => 'Bearer $accessToken')
         .concat(HttpLink(backendUrl));

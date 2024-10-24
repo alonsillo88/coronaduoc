@@ -55,8 +55,6 @@ class HomeScreen extends StatelessWidget {
     final buttonData = [
       {'text': 'SINCRONIZAR', 'onPressed': () => _navigateTo(context, const SyncScreen())},
       {'text': 'PICKING ASIGNADO', 'onPressed': () => _navigateTo(context, const PickingAsignadoScreen())},
-      {'text': 'CONSOLIDADO RECOLECCIÓN', 'onPressed': () {}},
-      {'text': 'CONSULTAR STOCK', 'onPressed': () {}},
     ];
 
     return buttonData

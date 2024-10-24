@@ -28,8 +28,6 @@ class CustomDrawer extends StatelessWidget {
     return [
       _buildExpansionTile('SINCRONIZAR', ['Historial', 'Enviar/Recibir']),
       _buildExpansionTile('PICKING ASIGNADO', ['Pendientes', 'Finalizados', 'Quiebres']),
-      _buildExpansionTile('CONSOLIDADO RECOLECCIÓN', ['Seleccionar Ordenes', 'Recolectar']),
-      _buildListTile('CONSULTAR STOCK'),
     ];
   }
 

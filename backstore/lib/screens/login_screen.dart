@@ -57,12 +57,15 @@ class LoginScreenState extends State<LoginScreen> {
         ),
       );
 
+      if (!mounted) return; // Verificar si el estado aún está montado antes de continuar
+
       if (result.hasException) {
         _showSnackBar('Error al iniciar sesión, intenta de nuevo', Colors.red);
       } else {
         final data = result.data?['login'];
         if (data != null && List<String>.from(data['roles']).contains('Picker')) {
           await _storeUserData(data);
+          if (!mounted) return; // Verificar si el estado aún está montado antes de mostrar el mensaje o navegar
           _showSnackBar('Inicio de sesión exitoso', Colors.green);
           await Future.delayed(const Duration(seconds: 1)); // Esperar para que se vea el mensaje
           _navigateToHome();
@@ -71,7 +74,9 @@ class LoginScreenState extends State<LoginScreen> {
         }
       }
     } catch (e) {
-      _showSnackBar('Ocurrió un error inesperado. Intenta de nuevo', Colors.red);
+      if (mounted) {
+        _showSnackBar('Ocurrió un error inesperado. Intenta de nuevo', Colors.red);
+      }
     }
   }
 
@@ -83,14 +88,19 @@ class LoginScreenState extends State<LoginScreen> {
     await prefs.setString('lastName', data['lastName']);
     await prefs.setStringList('roles', List<String>.from(data['roles']));
     await prefs.setString('idSucursal', data['idSucursal']);
-
-    // Asegurarse de que el token esté disponible antes de proceder
-    await prefs.reload();
   }
 
-  void _navigateToHome() => Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => const HomeScreen()));
+  void _navigateToHome() {
+    if (mounted) {
+      Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => const HomeScreen()));
+    }
+  }
 
-  void _showSnackBar(String message, Color color) => ScaffoldMessenger.of(context).showSnackBar(SnackBar(backgroundColor: color, content: Text(message)));
+  void _showSnackBar(String message, Color color) {
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(backgroundColor: color, content: Text(message)));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
