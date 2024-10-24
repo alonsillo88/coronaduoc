@@ -5,25 +5,33 @@ import { Model } from 'mongoose';
 import { User } from '../user/entities/user.entity';
 import { AuthToken } from './entities/auth-token.entity';
 import * as bcrypt from 'bcrypt';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthService {
     private readonly logger = new Logger(AuthService.name);
-
     constructor(
         @InjectModel(User.name) private userModel: Model<User>,
         @InjectModel(AuthToken.name) private authTokenModel: Model<AuthToken>,
-        private jwtService: JwtService
+        private jwtService: JwtService,
+   
+        
     ) {}
 
     async validateUser(email: string, password: string): Promise<any> {
+
+ 
+        console.log("HOLA!");
         this.logger.log('Iniciando validación del usuario...');
         
+        const usuarios = await this.userModel.find().exec();
+        console.log(usuarios);
+
         const user = await this.userModel.findOne({ email }).exec();  // No necesitamos `populate`
         
         if (!user) {
             this.logger.warn(`No se encontró el usuario con email: ${email}`);
-            throw new UnauthorizedException('Credenciales inválidas');
+            throw new UnauthorizedException('Credenciales inválidas (No email)');
         }
         
         this.logger.log('Comparando contraseñas...');
@@ -34,7 +42,7 @@ export class AuthService {
             return user;
         } else {
             this.logger.warn('Contraseña incorrecta.');
-            throw new UnauthorizedException('Credenciales inválidas');
+            throw new UnauthorizedException('Credenciales inválidas (No match)');
         }
     }
 

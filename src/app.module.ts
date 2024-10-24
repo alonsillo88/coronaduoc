@@ -18,9 +18,9 @@ import { SucursalModule } from './sucursal/sucursal.module';
       imports: [ConfigModule],
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
-        
         return {
           uri: configService.get<string>('MONGO_URI'),
+          ssl: true
         };
       },
     }),
