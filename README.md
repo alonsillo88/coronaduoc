@@ -30,53 +30,46 @@ dotenv para la gestión de configuraciones de entorno.
 
 Componentes de la Aplicación
 
-1. GestionOrdenes.js
+1. Login
+El primer paso para cualquier usuario del sistema es autenticarse mediante la pantalla de Login. El archivo Login.js maneja esta funcionalidad. Aquí se solicitan las credenciales del usuario (correo electrónico y contraseña), y si las credenciales son correctas, se genera un token JWT que se almacena localmente para permitir el acceso a las funcionalidades de la aplicación según el rol del usuario.
 
-Este componente se encarga de la gestión de las órdenes asignadas a la tienda. Algunas de las funcionalidades principales son:
+Validaciones: Se verifica que los campos estén completos y que el formato de correo sea correcto.
+Redirección: Una vez autenticado, el usuario es redirigido al Home correspondiente según el rol asignado.
 
-Visualización de órdenes: Permite ver todas las órdenes disponibles para la tienda, incluyendo detalles como la fecha de la orden, estado, y asignación.
+2. Home
+El archivo Home.js gestiona la página principal a la que acceden los usuarios tras autenticarse. La página de inicio muestra un resumen de las funcionalidades disponibles para el usuario, dependiendo de su rol en el sistema: Administrador Global, Administrador de Tienda, o Picker, También puede poseer más de un rol.
 
-Asignación de órdenes: Facilita la asignación de una o varias órdenes a un picker (operador encargado del picking de productos).
+Administradores Globales: Ven un panel de administración que muestra todas las sucursales, estadísticas y la posibilidad de gestionar usuarios.
+Administradores de Tienda: Tienen acceso a la gestión de órdenes de su sucursal y la asignación de órdenes a los pickers.
+Pickers: Ven las órdenes que les han sido asignadas para recolección.
 
-Detallar una órden: Abre un modal que muestra detalles específicos de la órden, como los productos incluidos, imagen, cantidad, talla, color y cantidad confirmada.
+3. Menú Principal
+MenuPrincipal.js maneja el menú de navegación dinámico que se adapta al rol del usuario:
 
-Estados Backstore: Permite visualizar el estado de cada órden, mostrando si está confirmada, en quiebre parcial, total, o pendiente, usando un código de colores para facilitar la identificación.
+Picker: Solo muestra las órdenes asignadas.
+Administrador de Tienda: Muestra opciones para gestionar pedidos y asignar pickers.
+Administrador Global: Incluye todas las funcionalidades disponibles, como gestión de usuarios, sucursales y pedidos.
+Este menú garantiza que cada usuario solo vea las opciones y funcionalidades que le corresponden, lo cual mejora la experiencia y minimiza la complejidad.
 
-2. PickerOrdenes.js
+4. Gestión de Órdenes
+El archivo GestionOrdenes.js es fundamental para los Administradores de Tienda. Aquí se pueden visualizar todas las órdenes pendientes, asignarlas a los pickers y gestionar el estado de las órdenes.
 
-Este componente se utiliza para la gestión de órdenes asignadas a un picker. Algunas de sus funcionalidades incluyen:
+Asignación de Órdenes: Los administradores pueden asignar órdenes a los pickers específicos. La interfaz permite seleccionar una o varias órdenes y asignarlas mediante un picker previamente registrado.
+Detalle de Órdenes: Cada orden se puede visualizar en detalle, donde se muestran los productos, cantidad, cliente y otros detalles importantes.
+Evidencias de Asignación: Cada vez que una orden es asignada, el administrador puede ver quién es el picker asignado y la fecha de asignación.
 
-Visualización de órdenes asignadas: Permite al picker ver las órdenes asignadas y gestionar la cantidad de productos preparados.
+5. Picker Ordenes
+El componente PickerOrdenes.js está diseñado para los Pickers, que son los empleados encargados de recoger los productos en la tienda. Este archivo muestra una lista de las órdenes que han sido asignadas al picker autenticado:
 
-Confirmación de productos: El picker puede confirmar la cantidad de productos preparados, con opción de modificar la cantidad confirmada.
+Revisión de Órdenes: El picker puede ver todos los detalles de las órdenes asignadas, incluyendo los productos, la cantidad solicitada, y el cliente.
+Confirmación de Cantidad: Los pickers pueden actualizar la cantidad de productos recolectados. Si un producto no está disponible, se indica la razón (por ejemplo, "Faltante").
+Estado de la Orden: Los pickers confirman las cantidades y el estado de la orden se actualiza automáticamente a "Confirmada", "Quiebre Parcial" o "Quiebre Total".
 
-Estados de confirmación: Una vez que la órden está completamente confirmada o si presenta un quiebre parcial/total, la aplicación deshabilita la opción de modificar la cantidad, mostrando los valores previamente confirmados.
+6. Gestión de Usuarios y Sucursales
+Los Administradores Globales tienen acceso a funcionalidades adicionales a través de componentes diseñados para la gestión de usuarios y sucursales.
 
-3. Login.js
-
-Este componente gestiona la autenticación de los usuarios de la aplicación:
-
-Inicio de sesión: Permite a los usuarios ingresar sus credenciales para acceder al sistema.
-
-Manejo de tokens: Guarda el token de autenticación, así como otros datos importantes del usuario, en el almacenamiento local del navegador.
-
-4. ProtectedLayout.js
-
-Autorización de Acceso: Se encarga de proteger las rutas de la aplicación, asegurando que solo los usuarios autenticados puedan acceder a ciertas vistas.
-
-Diseño de la estructura: Renderiza el menú principal y el contenido de la ruta seleccionada, creando una estructura coherente para la navegación dentro de la aplicación.
-
-5. Home.js
-
-Este componente muestra un panel de bienvenida al usuario luego de iniciar sesión. Incluye detalles como:
-
-Mensaje de bienvenida: Muestra el nombre del usuario.
-
-Sucursal asignada: Presenta la sucursal donde el picker o administrador está trabajando, si corresponde.
-
-6. MenuPrincipal.js
-
-El menú principal de la aplicación proporciona las rutas para acceder a las diferentes funcionalidades de la misma, adaptando las opciones disponibles según los permisos del usuario (picker o administrador).
+Gestión de Usuarios: Los administradores globales pueden registrar, modificar o eliminar usuarios del sistema. También pueden asignar roles específicos (Picker, Administrador de Tienda, etc.).
+Gestión de Sucursales: Este módulo permite crear nuevas sucursales, asignar administradores a ellas y visualizar su estado actual. Esto facilita la administración y expansión del sistema en nuevas ubicaciones.
 
 Instalación y Configuración
 

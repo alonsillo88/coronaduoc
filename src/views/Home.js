@@ -1,15 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import MenuPrincipal from '../components/MenuPrincipal';
-import { getAllSucursales, getSucursal } from '../api/sucursalApi';
-
+import { getSucursal } from '../api/sucursalApi';
+import { Box, Typography, Avatar, List, ListItem, ListItemText, Paper } from '@mui/material';
 
 const Home = () => {
   const [selectedTienda, setSelectedTienda] = useState('');
-  const [sucursales, setSucursales] = useState([]);
   const [sucursalAsignada, setSucursalAsignada] = useState(null);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
-  
+
   useEffect(() => {
     const savedUser = {
       firstName: localStorage.getItem('nombreUsuario'),
@@ -21,26 +20,21 @@ const Home = () => {
     };
 
     if (savedUser && savedUser.roles && savedUser.roles.length > 0) {
-
-      
       setUser(savedUser);
 
-     
-        // Carga la sucursal asignada si no es Administrador Global
-        getSucursal(savedUser.token, savedUser.idSucursal)
-          .then((data) => {
-            setSucursalAsignada(data.nombreSucursal); // Asigna la sucursal del usuario
-            setSelectedTienda(data.idTienda); // Selecciona la tienda automáticamente
-            setLoading(false);
-          })
-          .catch((error) => {
-            console.error('Error al obtener la sucursal asignada:', error);
-            setLoading(false);
-          });
-      }
-    
+      // Carga la sucursal asignada si no es Administrador Global
+      getSucursal(savedUser.token, savedUser.idSucursal)
+        .then((data) => {
+          setSucursalAsignada(data.nombreSucursal); // Asigna la sucursal del usuario
+          setSelectedTienda(data.idTienda); // Selecciona la tienda automáticamente
+          setLoading(false);
+        })
+        .catch((error) => {
+          console.error('Error al obtener la sucursal asignada:', error);
+          setLoading(false);
+        });
+    }
   }, []);
-
 
   if (loading) {
     return <div>Cargando...</div>; // Muestra un mensaje mientras se carga la data
@@ -52,17 +46,38 @@ const Home = () => {
 
   return (
     <div className="home-container">
-      <div className="welcome-container">
-        <h2>Bienvenido {user.firstName} {user.lastName}!</h2>
+      <Box sx={{ textAlign: 'center', mb: 4 }}>
+      <Avatar 
+          alt="Backstore Logo" 
+          src="images/backstore.png" // Ruta al archivo en la carpeta public
+          sx={{ width: 500, height:200, margin: '0 auto' }} 
+        />
+        <Typography variant="h4" sx={{ mt: 2 }}>
+          Bienvenido, {user.firstName} {user.lastName}!
+        </Typography>
+      </Box>
 
-    
-          <div>
-            Tienda asignada: <br/> <h3>{sucursalAsignada ? sucursalAsignada : 'No asignada'}</h3>
-          </div>
-       
+      <Box sx={{ mb: 3 }}>
+        <Paper elevation={3} sx={{ padding: 2 }}>
+          <Typography variant="h5">Tienda asignada:</Typography>
+          <Typography variant="h6" color="primary">
+            {sucursalAsignada ? sucursalAsignada : 'No asignada'}
+          </Typography>
+        </Paper>
+      </Box>
 
-    
-      </div>
+      <Box sx={{ mb: 3 }}>
+        <Paper elevation={3} sx={{ padding: 2 }}>
+          <Typography variant="h5" sx={{ mb: 1 }}>Roles de Usuario:</Typography>
+          <List>
+            {user.roles.map((role, index) => (
+              <ListItem key={index}>
+                <ListItemText primary={role} />
+              </ListItem>
+            ))}
+          </List>
+        </Paper>
+      </Box>
     </div>
   );
 };

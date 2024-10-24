@@ -101,7 +101,7 @@ const Login = ({ setIsAuthenticated }) => {
                 </Paper>
                 <Grid container justifyContent="center" sx={{ mt: 2 }}>
                     <Typography variant="body2">
-                        ¿No tienes cuenta? <a href="/register">Regístrate</a>
+                       
                     </Typography>
                 </Grid>
             </Container>
