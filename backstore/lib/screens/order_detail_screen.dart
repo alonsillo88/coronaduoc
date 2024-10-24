@@ -11,11 +11,11 @@ class OrderDetailScreen extends StatefulWidget {
   final List<Map<String, dynamic>> completedData;
 
   const OrderDetailScreen({
-    Key? key,
+    super.key,
     required this.order,
     required this.pickingData,
     required this.completedData,
-  }) : super(key: key);
+  });
 
   @override
   State<OrderDetailScreen> createState() => _OrderDetailScreenState();

@@ -22,7 +22,9 @@ class LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
-    [_emailController, _passwordController].forEach((controller) => controller.addListener(_validateFields));
+    for (var controller in [_emailController, _passwordController]) {
+      controller.addListener(_validateFields);
+    }
   }
 
   void _validateFields() => setState(() => _isButtonEnabled = _emailController.text.isNotEmpty && _passwordController.text.isNotEmpty);

@@ -113,7 +113,7 @@ class _SyncScreenState extends State<SyncScreen> {
         MutationOptions(
           document: gql(updateOrderMutation),
           variables: variables,
-          context: Context().withEntry(
+          context: const Context().withEntry(
             HttpLinkHeaders(
               headers: {
                 'Authorization': 'Bearer $accessToken',
@@ -182,7 +182,7 @@ class _SyncScreenState extends State<SyncScreen> {
         QueryOptions(
           document: gql(queryOrders),
           variables: variables,
-          context: Context().withEntry(
+          context: const Context().withEntry(
             HttpLinkHeaders(
               headers: {
                 'Authorization': 'Bearer $accessToken',
@@ -307,7 +307,7 @@ class _SyncScreenState extends State<SyncScreen> {
                     ),
                   ),
                 )
-                .toList(),
+                ,
             if (_isLoading)
               const Center(child: CircularProgressIndicator()),
             if (!_isLoading && _pendingOrders.isNotEmpty)
