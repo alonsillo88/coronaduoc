@@ -15,7 +15,7 @@ export class UpdateOrderInput {
 @InputType()
 export class UpdateItemInput {
   @Field(() => Number)
-  productId: number;
+  ean: number;
 
   @Field(() => Number)
   quantityBackstoreConfirmados: number;

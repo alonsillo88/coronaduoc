@@ -67,9 +67,9 @@ EXPOSE 8080
 
 # Start the server using the production build
 CMD [ "node", "dist/main.js" ]
-# docker buildx build -t "api-backstorev2" -f Dockerfile .
-# docker run -i -t --detach --name "api-backstorev3" -p 8080:8080 -t api-backstorev3
-# docker tag api-backstorev3 backstorecontainer.azurecr.io/api-backstorev3
+# docker buildx build -t "api-backstorev6" -f Dockerfile .
+# docker run -i -t --detach --name "api-backstorev6" -p 8080:8080 -t api-backstorev6
+# docker tag api-backstorev6 backstorecontainer.azurecr.io/api-backstorev6
 # az login
 # az acr login --name backstorecontainer 
-# docker push backstorecontainer.azurecr.io/api-backstorev3 
+# docker push backstorecontainer.azurecr.io/api-backstorev6 

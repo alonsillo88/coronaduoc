@@ -18,6 +18,12 @@ export class OrderFilterInput {
   orderStatus?: string; 
 
   @Field({ nullable: true })
+  orderBackstoreStatus?: string; 
+
+  @Field({ nullable: true })
+  orderBackstoreStatusDate?: Date;
+
+  @Field({ nullable: true })
   deliveryType?: string;  
 
   @Field({ nullable: true })

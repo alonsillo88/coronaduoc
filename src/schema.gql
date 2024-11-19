@@ -182,6 +182,7 @@ type Order {
   taxValue: Float!
   totalValue: Float!
   orderBackstoreStatus: String
+  comments: String
   orderBackstoreStatusDate: DateTime
   assignment: Assignment
 }
@@ -211,6 +212,8 @@ type Query {
   findAllUsers: [User!]!
   user(email: String!): User!
   getOrders(filter: OrderFilterInput): [Order!]!
+  getTransportOrders: [Order!]!
+  getCCOrders(filter: OrderFilterInput): [Order!]!
   findAllSucursales: [Sucursal!]!
   getSucursal(idTienda: Int!): Sucursal!
 }
@@ -221,6 +224,8 @@ input OrderFilterInput {
   customerName: String
   facilityId: String
   orderStatus: String
+  orderBackstoreStatus: String
+  orderBackstoreStatusDate: DateTime
   deliveryType: String
   assignedTo: String
 }
@@ -233,6 +238,8 @@ type Mutation {
   removeUser(email: String!): Boolean!
   assignOrders(input: AssignOrdersInput!): [Order!]!
   updateOrderForPicking(updateOrderInput: UpdateOrderInput!): Order!
+  updateTransportOrderStatus(input: UpdateTransportOrderInput!): Order!
+  updateCCOrderStatus(updateCCOrderInput: UpdateCCOrderInput!): Order!
   createSucursal(createSucursalInput: CreateSucursalInput!): Sucursal!
   updateSucursal(updateSucursalInput: UpdateSucursalInput!): Sucursal!
   removeSucursal(idTienda: Int!): Sucursal!
@@ -278,9 +285,21 @@ input UpdateOrderInput {
 }
 
 input UpdateItemInput {
-  productId: Float!
+  ean: Float!
   quantityBackstoreConfirmados: Float!
   breakReason: String
+}
+
+input UpdateTransportOrderInput {
+  externalOrderId: String!
+  newStatus: String!
+  comments: String
+}
+
+input UpdateCCOrderInput {
+  externalOrderId: String!
+  newStatus: String!
+  comments: String
 }
 
 input CreateSucursalInput {

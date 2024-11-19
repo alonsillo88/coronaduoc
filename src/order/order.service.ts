@@ -5,8 +5,9 @@ import { Order } from './entities/order.entity';
 import { OrderFilterInput } from './dto/order-filter-input';
 import { AssignOrdersInput } from './dto/assign-orders-input';
 import { UpdateOrderInput } from './dto/update-order.input';
+import { UpdateTransportOrderInput } from './dto/update-transport-order.input';
 import { Item } from './entities/item.entity';
-
+import { UpdateCCOrderInput } from './dto/update-cc-order.input';
 
 @Injectable()
 export class OrderService {
@@ -14,7 +15,7 @@ export class OrderService {
 
   async searchOrders(filter: OrderFilterInput): Promise<Order[]> {
     const query: any = {};
-    
+
     // Filtrado dinámico basado en los parámetros
     if (filter.externalOrderId) {
       query.externalOrderId = filter.externalOrderId;
@@ -31,14 +32,14 @@ export class OrderService {
     if (filter.orderStatus) {
       query.orderStatus = filter.orderStatus;
     }
-    if (filter.deliveryType) {
-      query['logisticsInfo.deliveryType'] = filter.deliveryType;  // Filtrar por tipo de entrega
+    if (filter.orderBackstoreStatus) {
+      query.orderBackstoreStatus = filter.orderBackstoreStatus;
     }
-
+    if (filter.deliveryType) {
+      query['logisticsInfo.deliveryType'] = filter.deliveryType; // Filtrar por tipo de entrega (pickup o residential)
+    }
     if (filter.assignedTo) {
-      Logger.log("Entra a esta parte");
-      Logger.log(filter.assignedTo);
-      query['assignment.assignedTo'] = filter.assignedTo;  // Filtrar a quien le fue asignada la orden
+      query['assignment.assignedTo'] = filter.assignedTo; // Filtrar a quien le fue asignada la orden
     }
     Logger.log(query);
     return this.orderModel.find(query).exec();
@@ -70,21 +71,21 @@ export class OrderService {
     // Buscar la orden en la base de datos
     const order = await this.orderModel.findOne({ externalOrderId });
     if (!order) {
-        throw new NotFoundException(`No se encontró la orden con externalOrderId: ${externalOrderId}`);
+      throw new NotFoundException(`No se encontró la orden con externalOrderId: ${externalOrderId}`);
     }
 
-    // Crear un nuevo array de ítems para actualizar la orden
+    // Crear un nuevo array de ítems para actualizar la orden (Se cambia product id por ean como atributo principal y único en el array de items)
     const updatedItems = order.items.map((item) => {
-        const itemUpdate = items.find((i) => i.productId == item.productId);
-        if (itemUpdate) {
-            Logger.log(`Actualizando ítem: ${item.productId}`);
-            return {
-                ...item,
-                quantityConfirmedBackstore: itemUpdate.quantityBackstoreConfirmados,
-                breakReason: itemUpdate.breakReason || null,
-            };
-        }
-        return item;
+      const itemUpdate = items.find((i) => i.ean == item.ean);
+      if (itemUpdate) {
+        Logger.log(`Actualizando ítem con EAN : ${item.ean}`);
+        return {
+          ...item,
+          quantityConfirmedBackstore: itemUpdate.quantityBackstoreConfirmados,
+          breakReason: itemUpdate.breakReason || null,
+        };
+      }
+      return item;
     });
 
     // Asignar los ítems actualizados a la orden
@@ -96,7 +97,53 @@ export class OrderService {
 
     // Guardar la orden con los ítems actualizados
     return await order.save();
-}
-    
-}
+  }
 
+  // Obtener órdenes de transporte para Coordinación SFS
+  async getTransportOrders(): Promise<Order[]> {
+    const query: any = {
+      orderStatus: 'confirmada', // Filtrar órdenes confirmadas
+      'logisticsInfo.deliveryType': 'ship-from-store', // Filtrar órdenes de envío a domicilio
+    };
+
+    Logger.log('Obteniendo órdenes de transporte con el siguiente filtro:', query);
+    return this.orderModel.find(query).exec();
+  }
+
+  // Actualizar estado de una orden de transporte
+  async updateTransportOrderStatus(updateTransportOrderInput: UpdateTransportOrderInput): Promise<Order> {
+    const { externalOrderId, newStatus } = updateTransportOrderInput;
+
+    // Buscar la orden en la base de datos
+    const order = await this.orderModel.findOne({ externalOrderId });
+    if (!order) {
+      throw new NotFoundException(`No se encontró la orden con externalOrderId: ${externalOrderId}`);
+    }
+
+    // Actualizar el estado de la orden
+    order.orderBackstoreStatus = newStatus;
+    order.orderBackstoreStatusDate = new Date();
+
+    // Guardar la orden actualizada
+    Logger.log(`Actualizando estado de la orden ${externalOrderId} a ${newStatus}`);
+    return await order.save();
+  }
+
+
+  async updateCCOrderStatus(updateCCOrderInput: UpdateCCOrderInput): Promise<Order> {
+    const { externalOrderId, newStatus, comments } = updateCCOrderInput;
+
+    const order = await this.orderModel.findOne({ externalOrderId });
+    if (!order) {
+      throw new NotFoundException(`No se encontró la orden con externalOrderId: ${externalOrderId}`);
+    }
+
+    order.orderBackstoreStatus = newStatus;
+    order.orderBackstoreStatusDate = new Date();
+    if (comments) {
+      order.comments = comments; // Guardar comentarios adicionales si se proporcionan
+    }
+
+    return await order.save();
+  }
+}

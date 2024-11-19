@@ -115,11 +115,16 @@ export class Order extends Document {
 
     @Prop({ default: null })
     @Field({ nullable: true })
+    comments: string;
+
+    @Prop({ default: null })
+    @Field({ nullable: true })
     orderBackstoreStatusDate: Date;
 
     @Prop({ type: Object, default: null })
     @Field(() => Assignment, { nullable: true })
     assignment: Assignment;
+    
 }
 
 export const OrderSchema = SchemaFactory.createForClass(Order);
