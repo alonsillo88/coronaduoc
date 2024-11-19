@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { DataGrid } from '@mui/x-data-grid';
-import { Box, Button, Typography, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Switch, FormControlLabel, Alert } from '@mui/material';
+import { Box, Button, Typography, Dialog, DialogActions, DialogContent, DialogTitle, TextField, Switch, FormControlLabel, Alert, Backdrop, CircularProgress, Grid } from '@mui/material';
 import { getAllSucursales, createSucursal, updateSucursal, removeSucursal } from '../api/sucursalApi';
 
 const AdminSucursales = ({ token }) => {
@@ -15,9 +15,12 @@ const AdminSucursales = ({ token }) => {
     const [tipo, setTipo] = useState('');
     const [estado, setEstado] = useState(true); // True: Activa, False: Inactiva
     const [alert, setAlert] = useState({ type: '', message: '', visible: false });
+    const [loading, setLoading] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
 
     useEffect(() => {
         const fetchSucursales = async () => {
+            setLoading(true);
             try {
                 const sucursalesData = await getAllSucursales(token);
                 // Asigna `idTienda` a `id` para que cada fila tenga un identificador único
@@ -28,6 +31,8 @@ const AdminSucursales = ({ token }) => {
                 setSucursales(updatedSucursales);
             } catch (error) {
                 setAlert({ type: 'error', message: 'Error al obtener las sucursales.', visible: true });
+            } finally {
+                setLoading(false);
             }
         };
         fetchSucursales();
@@ -58,12 +63,15 @@ const AdminSucursales = ({ token }) => {
     };
 
     const handleDeleteSucursal = async (sucursalId) => {
+        setLoading(true);
         try {
             await removeSucursal(token, sucursalId);
             setSucursales(sucursales.filter(sucursal => sucursal.idTienda !== sucursalId));
             setAlert({ type: 'success', message: 'Sucursal eliminada correctamente.', visible: true });
         } catch (error) {
             setAlert({ type: 'error', message: 'Error al eliminar la sucursal.', visible: true });
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -87,6 +95,7 @@ const AdminSucursales = ({ token }) => {
             tipo
         };
 
+        setLoading(true);
         try {
             if (dialogMode === 'add') {
                 const newSucursal = await createSucursal(token, sucursalData);
@@ -103,10 +112,19 @@ const AdminSucursales = ({ token }) => {
             }
         } catch (error) {
             setAlert({ type: 'error', message: 'Error al guardar la sucursal.', visible: true });
+        } finally {
+            setLoading(false);
+            handleDialogClose();
         }
-
-        handleDialogClose();
     };
+
+    const handleSearchChange = (e) => {
+        setSearchTerm(e.target.value);
+    };
+
+    const filteredSucursales = sucursales.filter((sucursal) =>
+        sucursal.nombreSucursal.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
     const columns = [
         { field: 'idTienda', headerName: 'ID Tienda', width: 100 },
@@ -124,7 +142,9 @@ const AdminSucursales = ({ token }) => {
                     <Button variant="contained" color="primary" size="small" onClick={() => handleEditSucursal(params.row)} sx={{ mr: 1 }}>
                         Editar
                     </Button>
-                
+                    <Button variant="contained" color="error" size="small" onClick={() => handleDeleteSucursal(params.row.idTienda)}>
+                        Eliminar
+                    </Button>
                 </>
             )
         }
@@ -132,19 +152,39 @@ const AdminSucursales = ({ token }) => {
 
     return (
         <Box sx={{ p: 3 }}>
+            <Backdrop open={loading} sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}>
+                <CircularProgress color="inherit" />
+            </Backdrop>
             <Typography variant="h4" gutterBottom>Administración de Sucursales</Typography>
             {alert.visible && (
                 <Alert severity={alert.type} onClose={() => setAlert({ ...alert, visible: false })} sx={{ mb: 2 }}>
                     {alert.message}
                 </Alert>
             )}
+            <Grid container spacing={2} sx={{ mb: 2 }}>
+                <Grid item xs={12} md={4} lg={3}>
+                    <TextField
+                        label="Buscar Sucursales"
+                        variant="outlined"
+                        fullWidth
+                        value={searchTerm}
+                        onChange={handleSearchChange}
+                    />
+                </Grid>
+            </Grid>
             <Button variant="contained" color="primary" onClick={handleAddSucursal} sx={{ mb: 2 }}>
                 Agregar Sucursal
             </Button>
-            <DataGrid rows={sucursales} columns={columns} pageSize={5} autoHeight />
+            <DataGrid 
+                rows={filteredSucursales} 
+                columns={columns} 
+                autoHeight 
+                getRowId={(row) => row.idTienda} // Usar idTienda como identificador único
+                rowsPerPageOptions={[]}
+            />
 
             {/* Dialog para agregar/editar sucursal */}
-            <Dialog open={openDialog} onClose={handleDialogClose}>
+            <Dialog open={openDialog} onClose={handleDialogClose} maxWidth="sm" fullWidth>
                 <DialogTitle>{dialogMode === 'add' ? 'Agregar Sucursal' : 'Editar Sucursal'}</DialogTitle>
                 <DialogContent>
                     <TextField

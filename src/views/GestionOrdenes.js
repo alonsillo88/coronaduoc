@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { DataGrid, esES } from '@mui/x-data-grid';
+import { DataGrid, esES, GridToolbar } from '@mui/x-data-grid';
 import { getOrdersForStore, assignOrdersToPicker, getPickersBySucursal } from '../api/orderApi';
-import { Button, MenuItem, Select, InputLabel, FormControl, Box, Typography, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Alert, IconButton, Grid, Card, CardContent } from '@mui/material';
+import { Button, MenuItem, Select, InputLabel, FormControl, Box, Typography, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Alert, IconButton, Grid, Card, CardContent, CircularProgress, Backdrop, Chip, Paper, Divider } from '@mui/material';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import { getAllSucursales, getSucursal } from '../api/sucursalApi';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -22,9 +22,11 @@ const GestionOrdenes = () => {
     const [addedOrders, setAddedOrders] = useState([]);
     const [openDetailDialog, setOpenDetailDialog] = useState(false);
     const [selectedOrderDetails, setSelectedOrderDetails] = useState(null);
+    const [backdropOpen, setBackdropOpen] = useState(false);
     const isMobile = useMediaQuery('(max-width:600px)');
 
     useEffect(() => {
+        setBackdropOpen(true);
         const savedUser = {
             firstName: localStorage.getItem('nombreUsuario'),
             lastName: localStorage.getItem('apellidoUsuario'),
@@ -46,13 +48,18 @@ const GestionOrdenes = () => {
                     .catch((error) => {
                         console.error('Error al obtener la sucursal asignada:', error);
                         setLoading(false);
-                });
+                    })
+                    .finally(() => {
+                        setBackdropOpen(false);
+                    });
             } else {
                 console.error('Rol inválido.');
                 setLoading(false);
+                setBackdropOpen(false);
             }
         } else {
             setLoading(false);
+            setBackdropOpen(false);
         }
     }, []);
 
@@ -60,7 +67,7 @@ const GestionOrdenes = () => {
         const fetchData = async () => {
             try {
                 setLoading(true);
-                
+                setBackdropOpen(true);
                 const response = await getOrdersForStore(user.token, selectedTienda);
                 console.log(response);
 
@@ -80,6 +87,7 @@ const GestionOrdenes = () => {
                 setOrders([]); // Asegura que no haya órdenes antiguas si ocurre un error
             } finally {
                 setLoading(false);
+                setBackdropOpen(false);
             }
         };
 
@@ -87,7 +95,6 @@ const GestionOrdenes = () => {
             fetchData();
         }
     }, [user, selectedTienda]);
-
 
     const handleAddOrder = (order) => {
         if (!addedOrders.includes(order.externalOrderId)) {
@@ -101,12 +108,13 @@ const GestionOrdenes = () => {
 
     const handleAssignPicker = async () => {
         if (!selectedPicker) {
-            setAlertMessage({ message: 'Debe seleccionar un picker', severity: 'warning' });
+            setAlertMessage({ message: 'Debe seleccionar un picker para poder asignar la orden', severity: 'warning' });
             return;
         }
         if (addedOrders.length > 0) {
             setDialogAction(() => async () => {
                 try {
+                    setBackdropOpen(true);
                     await assignOrdersToPicker(user.token, selectedPicker, addedOrders, user.email);
                     const updatedOrders = await getOrdersForStore(user.token, selectedTienda);
                     setOrders(updatedOrders);
@@ -116,6 +124,8 @@ const GestionOrdenes = () => {
                 } catch (error) {
                     console.error('Error al asignar órdenes:', error);
                     setAlertMessage({ message: 'Error al asignar órdenes', severity: 'error' });
+                } finally {
+                    setBackdropOpen(false);
                 }
             });
             setOpenConfirmDialog(true);
@@ -126,11 +136,12 @@ const GestionOrdenes = () => {
 
     const handleAssignSingleOrder = (orderId) => {
         if (!selectedPicker) {
-            setAlertMessage({ message: 'Debe seleccionar un picker', severity: 'warning' });
+            setAlertMessage({ message: 'Debe seleccionar un picker para poder asignar la orden', severity: 'warning' });
             return;
         }
         setDialogAction(() => async () => {
             try {
+                setBackdropOpen(true);
                 await assignOrdersToPicker(user.token, selectedPicker, [orderId], user.email);
                 const updatedOrders = await getOrdersForStore(user.token, selectedTienda);
                 setOrders(updatedOrders);
@@ -139,6 +150,8 @@ const GestionOrdenes = () => {
             } catch (error) {
                 console.error('Error al asignar la orden:', error);
                 setAlertMessage({ message: 'Error al asignar la orden', severity: 'error' });
+            } finally {
+                setBackdropOpen(false);
             }
         });
         setOpenConfirmDialog(true);
@@ -282,6 +295,9 @@ const GestionOrdenes = () => {
 
     return (
         <div>
+            <Backdrop open={backdropOpen} sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}>
+                <CircularProgress color="inherit" />
+            </Backdrop>
             <Box sx={{ height: 600, width: '100%', padding: 0 }}>
                 <Typography variant="h4" sx={{paddingLeft:'40px', mb: 2 }}>
                     Gestión de Órdenes
@@ -317,24 +333,31 @@ const GestionOrdenes = () => {
                     </Button>
                 </Box>
 
-                <Box sx={{ mb: 2, p: 2, border: '1px solid #ccc', borderRadius: '8px', display: 'flex', flexWrap: 'wrap', gap: 2 }}>
-                    <Typography variant="h6" sx={{ width: '100%' }}>Órdenes agregadas:</Typography>
-                    {addedOrders.length === 0 ? (
-                        <Typography variant="body2">Ninguna</Typography>
-                    ) : (
-                        addedOrders.map((orderId) => (
-                            <Box key={orderId} sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                                <Typography variant="body2" sx={{ mr: 1 }}>{orderId}</Typography>
-                                <IconButton onClick={() => handleRemoveOrder(orderId)} color="error" size="small">
-                                    <DeleteIcon />
-                                </IconButton>
-                            </Box>
-                        ))
-                    )}
-                </Box>
+                <Paper elevation={3} sx={{ mb: 2, p: 2, borderRadius: '8px', display: 'flex', flexDirection: 'column', gap: 2 }}>
+                    <Typography variant="h6" sx={{ mb: 1 }}>Órdenes para asignar a picker seleccionado:</Typography>
+                    <Divider />
+                    <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                        {addedOrders.length === 0 ? (
+                            <Typography variant="body2">Ninguna orden agregada</Typography>
+                        ) : (
+                            addedOrders.map((orderId) => (
+                                <Chip
+                                    key={orderId}
+                                    label={orderId}
+                                    onDelete={() => handleRemoveOrder(orderId)}
+                                    color="primary"
+                                    variant="outlined"
+                                    sx={{ fontWeight: 'bold' }}
+                                />
+                            ))
+                        )}
+                    </Box>
+                </Paper>
 
                 {loading ? (
-                    <Typography variant="h6">Cargando órdenes...</Typography>
+                    <Backdrop open={loading} sx={{ color: '#fff', zIndex: (theme) => theme.zIndex.drawer + 1 }}>
+                        <CircularProgress color="inherit" />
+                    </Backdrop>
                 ) : (
                     <Box sx={{ overflowX: 'auto' }}>
                         <DataGrid
@@ -347,6 +370,9 @@ const GestionOrdenes = () => {
                             localeText={{
                                 ...esES.components.MuiDataGrid.defaultProps.localeText,
                                 noRowsLabel: 'No hay órdenes disponibles'
+                            }}
+                            components={{
+                                Toolbar: GridToolbar,
                             }}
                             sx={{
                                 '& .MuiDataGrid-columnHeaders': {

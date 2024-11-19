@@ -6,6 +6,12 @@
   --color-purple-dark: #6200EA;
   --color-hover-purple: #B300FF;
   --color-text-white: #FFFFFF;
+  
+  --color-picker: #2d68d6; /* Color para Picker */
+  --color-admin-tienda: #a200ff; /* Color para Administrador de Tienda */
+  --color-admin-global: #000000; /* Color para Administrador Global */
+  --color-encargado-cc: #e91e1e; /* Color para Encargado C&C */
+  --color-coordinador-sfs: #449448; /* Color para Coordinador SFS */
 }
 
 body {

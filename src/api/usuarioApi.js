@@ -1,5 +1,16 @@
 import api from './api';
 
+// Manejar autenticación expirada
+const handleUnauthenticated = (errors) => {
+    if (errors && errors.some(error => error.code === 'UNAUTHENTICATED')) {
+        // Redirigir al login si el token ha caducado
+        alert("La sesión actual ha finalizado");
+        window.location.href = '/login';
+        return true;
+    }
+    return false;
+};
+
 // Obtener todos los usuarios
 export const getAllUsuarios = async (token) => {
     const query = `
@@ -21,6 +32,10 @@ export const getAllUsuarios = async (token) => {
                 Authorization: `Bearer ${token}`,
             }
         });
+
+        if (handleUnauthenticated(response.data.errors)) {
+            return [];
+        }
 
         return response.data.data.findAllUsers;
     } catch (error) {
@@ -56,6 +71,10 @@ export const createUsuario = async (token, userData) => {
             }
         });
 
+        if (handleUnauthenticated(response.data.errors)) {
+            return null;
+        }
+
         console.log("Respuesta completa del servidor:", response);
         return response.data.data.createUser;
     } catch (error) {
@@ -63,7 +82,6 @@ export const createUsuario = async (token, userData) => {
         return null;
     }
 };
-
 
 // Actualizar un usuario
 export const updateUsuario = async (token, userData) => {
@@ -91,6 +109,11 @@ export const updateUsuario = async (token, userData) => {
                 Authorization: `Bearer ${token}`,
             }
         });
+
+        if (handleUnauthenticated(response.data.errors)) {
+            return null;
+        }
+
         console.log(response);
         return response.data.data.updateUser;
     } catch (error) {
@@ -122,6 +145,10 @@ export const updatePassword = async (token, email, newPassword) => {
             }
         });
 
+        if (handleUnauthenticated(response.data.errors)) {
+            return null;
+        }
+
         return response.data.data.updateUserPassword;
     } catch (error) {
         console.error('Error actualizando contraseña del usuario:', error);
@@ -138,7 +165,7 @@ export const removeUsuario = async (token, email) => {
     `;
 
     try {
-        await api.post('', {
+        const response = await api.post('', {
             query: mutation,
             variables: {
                 email: email
@@ -148,6 +175,10 @@ export const removeUsuario = async (token, email) => {
                 Authorization: `Bearer ${token}`,
             }
         });
+
+        if (handleUnauthenticated(response.data.errors)) {
+            return false;
+        }
 
         return true;
     } catch (error) {

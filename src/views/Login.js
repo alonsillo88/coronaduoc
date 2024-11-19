@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
     Container,
@@ -9,6 +9,7 @@ import {
     Grid,
     Paper,
     CssBaseline,
+    CircularProgress,
 } from '@mui/material';
 import { login } from '../api/authApi'; 
 import { createTheme, ThemeProvider } from '@mui/material/styles';
@@ -19,11 +20,19 @@ const Login = ({ setIsAuthenticated }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
+
+    useEffect(() => {
+        // Al entrar a la pantalla de login, limpiar el almacenamiento local para eliminar cualquier dato de sesión previa
+        localStorage.clear();
+        setIsAuthenticated(false);
+    }, [setIsAuthenticated]);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError('');
+        setLoading(true);
 
         try {
             const loginData = await login(email, password);
@@ -36,7 +45,7 @@ const Login = ({ setIsAuthenticated }) => {
                 localStorage.setItem('emailUsuario', email);
                 localStorage.setItem('rolesUsuario', JSON.stringify(loginData.roles));
                 localStorage.setItem('idSucursal', loginData.idSucursal);
-                setIsAuthenticated(true); // Actualiza el estado de autenticación
+                setIsAuthenticated(true);
                 
                 navigate('/home', { replace: true });
             } else {
@@ -45,6 +54,8 @@ const Login = ({ setIsAuthenticated }) => {
         } catch (err) {
             console.error('Error al iniciar sesión:', err);
             setError('Credenciales inválidas. Intenta de nuevo.');
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -69,6 +80,7 @@ const Login = ({ setIsAuthenticated }) => {
                                 autoFocus
                                 value={email}
                                 onChange={(e) => setEmail(e.target.value)}
+                                disabled={loading}
                             />
                             <TextField
                                 variant="outlined"
@@ -82,6 +94,7 @@ const Login = ({ setIsAuthenticated }) => {
                                 autoComplete="current-password"
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
+                                disabled={loading}
                             />
                             {error && (
                                 <Typography color="error" variant="body2" sx={{ mt: 1 }}>
@@ -93,15 +106,21 @@ const Login = ({ setIsAuthenticated }) => {
                                 variant="contained" 
                                 type="submit"
                                 fullWidth
+                                disabled={loading}
+                                sx={{ mt: 2 }}
                             >
-                                Iniciar Sesión
+                                {loading ? (
+                                    <CircularProgress size={24} sx={{ color: 'white' }} />
+                                ) : (
+                                    'Iniciar Sesión'
+                                )}
                             </Button>
                         </Box>
                     </Box>
                 </Paper>
                 <Grid container justifyContent="center" sx={{ mt: 2 }}>
                     <Typography variant="body2">
-                       
+                        {/* Espacio reservado para otros mensajes o links */}
                     </Typography>
                 </Grid>
             </Container>

@@ -1,5 +1,15 @@
 import api from './api';
 
+// Manejar autenticación expirada
+const handleUnauthenticated = (errors) => {
+    if (errors && errors.some(error => error.code === 'UNAUTHENTICATED')) {
+        // Redirigir al login si el token ha caducado
+        window.location.href = '/login';
+        return true;
+    }
+    return false;
+};
+
 // Obtener órdenes de la tienda
 export const getOrdersForStore = async (token, idSucursal) => {
     try {
@@ -137,7 +147,11 @@ export const getOrdersForStore = async (token, idSucursal) => {
                 Authorization: `Bearer ${token}`,
             }
         });
-        
+
+        if (handleUnauthenticated(response.data.errors)) {
+            return [];
+        }
+
         return response.data.data.getOrders;
     } catch (error) {
         console.error('Error al obtener las órdenes de la tienda:', error);
@@ -177,13 +191,8 @@ export const getPickersBySucursal = async (token, idSucursal) => {
             }
         });
 
-        if (response.status !== 200) {
-            throw new Error(`Error ${response.status}: ${response.statusText}`);
-        }
-
-        if (response.data.errors) {
-            console.error('Errores en la respuesta:', response.data.errors);
-            throw new Error('Error en la respuesta de la API GraphQL');
+        if (handleUnauthenticated(response.data.errors)) {
+            return [];
         }
 
         return response.data.data.getPickersBySucursal;
@@ -220,16 +229,25 @@ export const assignOrdersToPicker = async (token, pickerEmail, orderIds, assigne
         }
     };
 
-    const response = await api.post('', {
-        query: mutation,
-        variables,
-    }, {
-        headers: {
-            Authorization: `Bearer ${token}`,
+    try {
+        const response = await api.post('', {
+            query: mutation,
+            variables,
+        }, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            }
+        });
+
+        if (handleUnauthenticated(response.data.errors)) {
+            return null;
         }
-    });
-    console.log(response);
-    return response.data.data.assignOrders;
+
+        return response.data.data.assignOrders;
+    } catch (error) {
+        console.error('Error al asignar órdenes:', error);
+        return null;
+    }
 };
 
 // Obtener órdenes asignadas a un picker
@@ -279,6 +297,10 @@ export const getOrdersForPicker = async (token, pickerEmail) => {
             }
         });
 
+        if (handleUnauthenticated(response.data.errors)) {
+            return [];
+        }
+
         console.log('Response completa del backend:', response);
 
         if (response.data && response.data.data) {
@@ -295,8 +317,6 @@ export const getOrdersForPicker = async (token, pickerEmail) => {
         return [];
     }
 };
-
-
 
 // Actualizar una orden desde el picker
 export const updateOrderForPicking = async (token, updateOrderInput) => {
@@ -345,6 +365,10 @@ export const updateOrderForPicking = async (token, updateOrderInput) => {
             }
         });
 
+        if (handleUnauthenticated(response.data.errors)) {
+            return null;
+        }
+
         console.log('Respuesta completa del backend:', response);
 
         if (response.data && response.data.data) {
@@ -362,3 +386,176 @@ export const updateOrderForPicking = async (token, updateOrderInput) => {
         return null;
     }
 };
+
+
+// Obtener órdenes de transporte (Coordinación SFS)
+export const getTransportOrders = async (token) => {
+    try {
+        const query = `
+            query getTransportOrders {
+                getTransportOrders {
+                    id
+                    customer {
+                        firstName
+                        lastName
+                    }
+                    shippingAddress {
+                        street
+                        number
+                        city
+                        state
+                        postalCode
+                    }
+                    status
+                }
+            }
+        `;
+
+        const response = await api.post('', {
+            query,
+        }, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            }
+        });
+
+        if (handleUnauthenticated(response.data.errors)) {
+            return [];
+        }
+
+        return response.data.data.getTransportOrders;
+    } catch (error) {
+        console.error('Error al obtener las órdenes de transporte:', error);
+        return [];
+    }
+};
+
+// Actualizar estado de una orden de transporte
+export const updateTransportOrderStatus = async (token, orderId, status) => {
+    try {
+        const mutation = `
+            mutation updateTransportOrderStatus($input: UpdateTransportOrderInput!) {
+                updateTransportOrderStatus(input: $input) {
+                    id
+                    status
+                }
+            }
+        `;
+
+        const variables = {
+            input: {
+                id: orderId,
+                status: status
+            }
+        };
+
+        const response = await api.post('', {
+            query: mutation,
+            variables,
+        }, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            }
+        });
+
+        if (handleUnauthenticated(response.data.errors)) {
+            return null;
+        }
+
+        return response.data.data.updateTransportOrderStatus;
+    } catch (error) {
+        console.error('Error al actualizar el estado de la orden de transporte:', error);
+        return null;
+    }
+};
+
+// Obtener órdenes C&C para la sucursal asignada
+export const getCCOrders = async (token, idSucursal) => {
+    try {
+        const query = `
+            query getOrders($filter: OrderFilterInput!) {
+                getOrders(filter: $filter) {
+                    externalOrderId
+                    orderBackstoreStatus
+                    comments
+                    customer {
+                        firstName
+                        lastName
+                        document
+                        documentVerifyDigit
+                        email
+                        phone
+                    }
+                    items {
+                        skuName
+                        quantity
+                    }
+                }
+            }
+        `;
+
+        const response = await api.post('', {
+            query,
+            variables: {
+                filter: {
+                    facilityId: idSucursal.toString(),
+                    deliveryType: "pickup",
+                    orderBackstoreStatus: "Confirmada"
+                }
+            }
+        }, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            }
+        });
+
+        if (handleUnauthenticated(response.data.errors)) {
+            return [];
+        }
+
+        return response.data.data.getOrders;
+    } catch (error) {
+        console.error('Error al obtener las órdenes C&C:', error);
+        return [];
+    }
+};
+
+// Actualizar el estado de una orden C&C
+export const updateCCOrderStatus = async (token, updateCCOrderInput) => {
+    const mutation = `
+        mutation updateCCOrderStatus($updateCCOrderInput: UpdateCCOrderInput!) {
+            updateCCOrderStatus(updateCCOrderInput: $updateCCOrderInput) {
+                externalOrderId
+                orderBackstoreStatus
+                comments
+            }
+        }
+    `;
+
+    const variables = {
+        updateCCOrderInput
+    };
+
+    try {
+        const response = await api.post('', {
+            query: mutation,
+            variables,
+        }, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            }
+        });
+
+        if (handleUnauthenticated(response.data.errors)) {
+            return null;
+        }
+
+        return response.data.data.updateCCOrderStatus;
+    } catch (error) {
+        console.error('Error al actualizar el estado de la orden C&C:', error);
+        return null;
+    }
+};
+
+
+

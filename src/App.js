@@ -6,6 +6,8 @@ import PickerOrdenes from './views/PickerOrdenes';
 import GestionOrdenes from './views/GestionOrdenes';
 import AdminUsuarios from './views/AdminUsuarios';
 import AdminSucursales from './views/AdminSucursales';
+import EntregasCC from './views/EntregasCC';
+import CoordinacionSFS from './views/CoordinacionSFS';
 import ProtectedLayout from './components/ProtectedLayout';
 import { getAllSucursales, getSucursal } from './api/sucursalApi';
 
@@ -155,6 +157,26 @@ const App = () => {
             element={
               isAuthenticated && user?.roles.includes('Administrador Global') ? (
                 <AdminSucursales user={user} token={localStorage.getItem('token')} />
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
+          />
+          <Route
+            path="/entregas-cc"
+            element={
+              isAuthenticated && user?.roles.includes('Encargado C&C') ? (
+                <EntregasCC user={user} token={localStorage.getItem('token')} selectedTienda={selectedTienda} />
+              ) : (
+                <Navigate to="/login" />
+              )
+            }
+          />
+          <Route
+            path="/coordinacion-sfs"
+            element={
+              isAuthenticated && user?.roles.includes('Coordinador SFS') ? (
+                <CoordinacionSFS user={user} token={localStorage.getItem('token')} selectedTienda={selectedTienda} />
               ) : (
                 <Navigate to="/login" />
               )

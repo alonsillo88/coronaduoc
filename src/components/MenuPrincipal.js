@@ -8,6 +8,8 @@ import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import PeopleIcon from '@mui/icons-material/People';
 import BusinessIcon from '@mui/icons-material/Business';
 import LogoutIcon from '@mui/icons-material/Logout';
+import StorefrontIcon from '@mui/icons-material/Storefront';
+import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 import { useNavigate } from 'react-router-dom';
 
 const MenuPrincipal = ({ role, selectedTienda, onTiendaChange, sucursales, user, sucursalAsignada, onLogout }) => {
@@ -20,11 +22,13 @@ const MenuPrincipal = ({ role, selectedTienda, onTiendaChange, sucursales, user,
 
     // Definimos las opciones del menú en función del rol del usuario
     const menuItems = [
-        { text: 'Home', roles: ['Picker', 'Administrador de Tienda', 'Administrador Global'], path: '/home', icon: <HomeIcon /> },
-        { text: 'Órdenes para Picking', roles: ['Picker'], path: '/ordenes-picking', icon: <AssignmentIcon /> },
-        { text: 'Administración de Tienda', roles: ['Administrador de Tienda'], path: '/admin-ordenes', icon: <StoreIcon /> },
+        { text: 'Home', roles: ['Picker', 'Administrador de Tienda', 'Administrador Global', 'Encargado C&C', 'Coordinador SFS'], path: '/home', icon: <HomeIcon /> },
+        { text: 'Administrar Sucursales', roles: ['Administrador Global'], path: '/admin-sucursales', icon: <BusinessIcon /> },
         { text: 'Administrar Usuarios', roles: ['Administrador Global'], path: '/admin-usuarios', icon: <PeopleIcon /> },
-        { text: 'Administrar Sucursales', roles: ['Administrador Global'], path: '/admin-sucursales', icon: <BusinessIcon /> }
+        { text: 'Administración de Tienda', roles: ['Administrador de Tienda'], path: '/admin-ordenes', icon: <StoreIcon /> },
+        { text: 'Órdenes para Picking', roles: ['Picker'], path: '/ordenes-picking', icon: <AssignmentIcon /> },
+        { text: 'Entregas C&C', roles: ['Encargado C&C'], path: '/entregas-cc', icon: <StorefrontIcon /> },
+        { text: 'Coordinación SFS', roles: ['Coordinador SFS'], path: '/coordinacion-sfs', icon: <LocalShippingIcon /> }
     ];
 
     // Filtrar las opciones del menú según el rol del usuario

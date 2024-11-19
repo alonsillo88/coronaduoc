@@ -1,5 +1,16 @@
 import api from './api';
 
+// Manejar autenticación expirada
+const handleUnauthenticated = (errors) => {
+    if (errors && errors.some(error => error.code === 'UNAUTHENTICATED')) {
+        // Redirigir al login si el token ha caducado
+        alert("La sesión actual ha finalizado");
+        window.location.href = '/login';
+        return true;
+    }
+    return false;
+};
+
 // Obtener todas las sucursales
 export const getAllSucursales = async (token) => {
     const query = `
@@ -21,6 +32,11 @@ export const getAllSucursales = async (token) => {
                 Authorization: `Bearer ${token}`,
             }
         });
+
+        if (handleUnauthenticated(response.data.errors)) {
+            return [];
+        }
+
         return response.data.data.findAllSucursales;
     } catch (error) {
         console.error('Error obteniendo sucursales:', error);
@@ -53,6 +69,11 @@ export const getSucursal = async (token, idSucursal) => {
                 Authorization: `Bearer ${token}`,
             }
         });
+
+        if (handleUnauthenticated(response.data.errors)) {
+            return null;
+        }
+
         return response.data.data.getSucursal;
     } catch (error) {
         console.error('Error obteniendo sucursal:', error);
@@ -84,6 +105,11 @@ export const createSucursal = async (token, sucursalData) => {
                 Authorization: `Bearer ${token}`,
             }
         });
+
+        if (handleUnauthenticated(response.data.errors)) {
+            return null;
+        }
+
         return response.data.data.createSucursal;
     } catch (error) {
         console.error('Error creando sucursal:', error);
@@ -115,6 +141,11 @@ export const updateSucursal = async (token, sucursalData) => {
                 Authorization: `Bearer ${token}`,
             }
         });
+
+        if (handleUnauthenticated(response.data.errors)) {
+            return null;
+        }
+
         return response.data.data.updateSucursal;
     } catch (error) {
         console.error('Error actualizando sucursal:', error);
@@ -142,6 +173,11 @@ export const removeSucursal = async (token, idTienda) => {
                 Authorization: `Bearer ${token}`,
             }
         });
+
+        if (handleUnauthenticated(response.data.errors)) {
+            return null;
+        }
+
         return response.data.data.removeSucursal;
     } catch (error) {
         console.error('Error eliminando sucursal:', error);
