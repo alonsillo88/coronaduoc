@@ -35,7 +35,7 @@
     "xlsx": "^0.18.5"
   },
   "scripts": {
-  "start:dev": "react-scripts start",
+  "start:dev": "env PORT=80 env-cmd -f .env.dev react-scripts start",
   "start:qa": "env PORT=80 env-cmd -f .env.qa react-scripts start",
   "start:prd": "env PORT=80 env-cmd -f .env.prd react-scripts start",
   "start": "env PORT=80 react-scripts start",

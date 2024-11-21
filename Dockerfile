@@ -56,9 +56,9 @@ ENV REACT_APP_BACKEND_URL=https://backstorebackend-ghcyc2e2hwh6b3hx.brazilsouth-
 
 # Iniciar NGINX
 CMD ["nginx", "-g", "daemon off;"]
-# docker buildx build -t "frontend-backstorev7" -f Dockerfile .
-# docker run -i -t --detach --name "frontend-backstorev7" -p 8080:8080 -t frontend-backstorev7
-# docker tag frontend-backstorev7 backstorefrontendcontainer.azurecr.io/frontend-backstorev7
+# docker buildx build -t "frontend-backstorev8" -f Dockerfile .
+# docker run -i -t --detach --name "frontend-backstorev8" -p 8080:8080 -t frontend-backstorev8
+# docker tag frontend-backstorev8 backstorefrontendcontainer.azurecr.io/frontend-backstorev8
 # az login
 # az acr login --name backstorefrontendcontainer 
-# docker push backstorefrontendcontainer.azurecr.io/frontend-backstorev7
+# docker push backstorefrontendcontainer.azurecr.io/frontend-backstorev8
