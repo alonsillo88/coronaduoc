@@ -74,34 +74,35 @@ class _PickingAsignadoScreenState extends State<PickingAsignadoScreen> {
   }
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: CustomColors.background,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: CustomColors.black),
+Widget build(BuildContext context) {
+  return Scaffold(
+    appBar: AppBar(
+      backgroundColor: CustomColors.background,
+      elevation: 0,
+      leading: IconButton(
+        icon: const Icon(Icons.arrow_back, color: CustomColors.black),
+        onPressed: () {
+          Navigator.pop(context); // Regresa a la pantalla anterior
+        },
+      ),
+      title: const Center(
+        child: StaticCoronaLogo(
+          size: 125,
+          color: CustomColors.black,
+        ),
+      ),
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.account_circle,
+              color: CustomColors.lightGray),
           onPressed: () {
-            Navigator.pop(context); // Regresa a la pantalla anterior
+            // Acción para el icono de perfil
           },
         ),
-        title: const Center(
-          child: StaticCoronaLogo(
-            size: 125,
-            color: CustomColors.black,
-          ),
-        ),
-        actions: [
-          IconButton(
-            icon:
-                const Icon(Icons.account_circle, color: CustomColors.lightGray),
-            onPressed: () {
-              // Acción para el icono de perfil
-            },
-          ),
-        ],
-      ),
-      body: Padding(
+      ],
+    ),
+    body: SingleChildScrollView( // Permite desplazamiento en todo el cuerpo
+      child: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -160,8 +161,9 @@ class _PickingAsignadoScreenState extends State<PickingAsignadoScreen> {
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Widget _buildExpandableTile({
     required String title,

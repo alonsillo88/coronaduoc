@@ -1,8 +1,8 @@
 import 'package:backstore/utils/custom_colors.dart';
 import 'package:flutter/material.dart';
-import 'package:mobile_scanner/mobile_scanner.dart'; // Paquete para escaneo de códigos de barras
+import 'package:mobile_scanner/mobile_scanner.dart'; 
 import 'package:intl/intl.dart';
-import 'package:shared_preferences/shared_preferences.dart'; // Para guardar cambios permanentes
+import 'package:shared_preferences/shared_preferences.dart'; 
 import 'dart:convert';
 
 class OrderDetailScreen extends StatefulWidget {
@@ -22,6 +22,7 @@ class OrderDetailScreen extends StatefulWidget {
 }
 
 class _OrderDetailScreenState extends State<OrderDetailScreen> {
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -129,7 +130,24 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             IconButton(
               icon: const Icon(Icons.camera_alt),
               onPressed: () {
-                _scanBarcode(item, index);
+                if ((item['quantityConfirmedBackstore'] ?? 0) >= item['quantity']) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: const Text(
+                          'Cantidad máxima confirmada. Modifique manualmente si desea ajustar.'),
+                      backgroundColor: Colors.orange,
+                      action: SnackBarAction(
+                        label: 'Editar Manualmente',
+                        textColor: Colors.white,
+                        onPressed: () {
+                          _showConfirmationModal(item, index);
+                        },
+                      ),
+                    ),
+                  );
+                } else {
+                  _scanBarcode(item, index);
+                }
               },
             ),
           ],
@@ -138,64 +156,74 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     );
   }
 
-  void _showConfirmationModal(Map<String, dynamic> item, int index) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        int confirmedQuantity = item['quantityConfirmedBackstore'] ?? 0;
-        return AlertDialog(
-          title: const Text('Confirmar Cantidad'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text('Selecciona la cantidad a confirmar:'),
-              DropdownButton<int>(
-                value: confirmedQuantity,
-                onChanged: (value) {
-                  setState(() {
-                    if (value != null &&
-                        value <= item['quantity'] &&
-                        value >= 0) {
-                      widget.order['items'][index]
-                          ['quantityConfirmedBackstore'] = value;
+void _showConfirmationModal(Map<String, dynamic> item, int index) {
+  showDialog(
+    context: context,
+    builder: (context) {
+      int confirmedQuantityTemp = item['quantityConfirmedBackstore'] ?? 0; 
+      return StatefulBuilder(
+        builder: (context, setStateModal) {
+          return AlertDialog(
+            title: const Text('Confirmar Cantidad'),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Text('Selecciona la cantidad a confirmar:'),
+                DropdownButton<int>(
+                  value: confirmedQuantityTemp,
+                  onChanged: (value) {
+                    if (value != null) {
+                      setStateModal(() {
+                        confirmedQuantityTemp = value; 
+                      });
                     }
-                  });
-                  Navigator.pop(context);
-                },
-                items: List.generate(
-                  item['quantity'] + 1,
-                  (index) => DropdownMenuItem(
-                      value: index, child: Text(index.toString())),
+                  },
+                  items: List.generate(
+                    item['quantity'] + 1,
+                    (index) => DropdownMenuItem(
+                        value: index, child: Text(index.toString())),
+                  ),
                 ),
+              ],
+            ),
+            actions: [
+              TextButton(
+                child: const Text('Cancelar'),
+                onPressed: () {
+                  Navigator.pop(context); 
+                },
+              ),
+              TextButton(
+                child: const Text('Guardar'),
+                onPressed: () {
+                  setState(() {
+                    widget.order['items'][index]
+                        ['quantityConfirmedBackstore'] = confirmedQuantityTemp;
+                  });
+                  Navigator.pop(context); 
+                },
               ),
             ],
-          ),
-          actions: [
-            TextButton(
-              child: const Text('Cancelar'),
-              onPressed: () {
-                Navigator.pop(context);
-              },
-            ),
-          ],
-        );
-      },
-    );
-  }
+          );
+        },
+      );
+    },
+  );
+}
 
   Future<void> _scanBarcode(Map<String, dynamic> item, int index) async {
     await showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: const Text('Escanear Código de Barras'),
+          title: const Text('Escanear Producto'),
           content: SizedBox(
             height: 300,
             width: 300,
             child: MobileScanner(
               onDetect: (barcodeCapture) {
                 final barcode = barcodeCapture.barcodes.first;
-                if (barcode.rawValue == item['ean'].toString()) {
+                if (barcode.rawValue != item['ean'].toString()) {
                   setState(() {
                     int currentConfirmed =
                         item['quantityConfirmedBackstore'] ?? 0;
@@ -203,12 +231,18 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                       widget.order['items'][index]
                           ['quantityConfirmedBackstore'] = currentConfirmed + 1;
                     }
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Producto escaneado correctamente'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
                   });
                   Navigator.pop(context);
                 } else {
                   ScaffoldMessenger.of(context).showSnackBar(
                     const SnackBar(
-                      content: Text('Código de barras no coincide'),
+                      content: Text('Producto incorrecto. Escanea nuevamente'),
                       backgroundColor: Colors.red,
                     ),
                   );
@@ -253,12 +287,11 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       widget.order['orderBackstoreStatus'] = orderStatus;
       widget.order['orderBackstoreStatusDate'] = DateTime.now().toIso8601String();
 
-      // Eliminar de pickingData y agregar a completedData
-      widget.pickingData.removeWhere((order) => order['externalOrderId'] == widget.order['externalOrderId']);
+      widget.pickingData
+          .removeWhere((order) => order['externalOrderId'] == widget.order['externalOrderId']);
       widget.completedData.add(widget.order);
     });
 
-    // Guardar cambios en SharedPreferences
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('orders', json.encode(widget.completedData));
 
@@ -266,11 +299,10 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       SnackBar(
         content: Text('Estado de la orden guardado: $orderStatus'),
         backgroundColor: Colors.green,
-        duration: const Duration(seconds: 1), // Mostrar durante 1 segundos
+        duration: const Duration(seconds: 1),
       ),
     );
 
-    // Navegar de vuelta a la pantalla de Picking Asignado después de un pequeño retraso.
     Future.delayed(const Duration(seconds: 1), () {
       if (mounted) {
         Navigator.pop(context);
