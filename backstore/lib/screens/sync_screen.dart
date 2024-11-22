@@ -55,8 +55,6 @@ class _SyncScreenState extends State<SyncScreen> {
     setState(() {
       _isLoading = true;
     });
-
-    // 1. Enviar órdenes completadas al backend antes de recibir la data actualizada.
     if (_completedOrders.isNotEmpty) {
       for (var order in _completedOrders) {
         await _updateOrderInBackend(order);
@@ -69,13 +67,8 @@ class _SyncScreenState extends State<SyncScreen> {
       await prefs.setString('orders', json.encode(_pendingOrders));
       await prefs.setString('sentRecords', json.encode(_sentRecords));
     }
-
-    // 2. Limpiar caché.
     GraphQLProvider.of(context).value.cache.store.reset();
-
-    // 3. Obtener las órdenes actualizadas del backend.
     await _fetchOrdersFromBackend();
-
     setState(() {
       _isLoading = false;
     });
@@ -197,8 +190,6 @@ class _SyncScreenState extends State<SyncScreen> {
       } else {
         final data = result.data?['getOrders'] ?? [];
         final newOrders = List<Map<String, dynamic>>.from(data);
-
-        // Filtrar órdenes y asegurarse de que no haya duplicados de externalOrderId
         final existingOrderIds = <String>{};
         existingOrderIds.addAll(_pendingOrders.map((order) => order['externalOrderId']));
         existingOrderIds.addAll(_quiebres.map((order) => order['externalOrderId']));

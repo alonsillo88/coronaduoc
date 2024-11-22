@@ -53,8 +53,6 @@ class _PickingAsignadoScreenState extends State<PickingAsignadoScreen> {
     if (quiebresJson != null) {
       setState(() {
         _quiebresData = List<Map<String, dynamic>>.from(json.decode(quiebresJson));
-
-        // Transformar los datos para que sean compatibles con la estructura esperada
         _quiebresData = _quiebresData.map((order) {
           final int totalQuantity = order['items']
               ?.fold(0, (sum, item) => sum + (item['quantity'] ?? 0)) ?? 0;
