@@ -31,7 +31,7 @@ class CustomDrawer extends StatelessWidget {
             ListTile(
               leading: const Icon(Icons.logout, color: CustomColors.black),
               title: const Text('Cerrar Sesión', style: TextStyle(color: CustomColors.black)),
-              onTap: () => _logout(context),
+              onTap: () => _showLogoutConfirmation(context),
             ),
           ],
         ),
@@ -59,11 +59,34 @@ class CustomDrawer extends StatelessWidget {
     );
   }
 
+  void _showLogoutConfirmation(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Cerrar Sesión'),
+          content: const Text('¿Está seguro que desea cerrar sesión?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancelar', style: TextStyle(color: CustomColors.black)),
+            ),
+            TextButton(
+              onPressed: () {
+                _logout(context); 
+              },
+              child: const Text('Aceptar', style: TextStyle(color: CustomColors.purple)),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Future<void> _logout(BuildContext context) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.clear(); // Limpia todos los datos guardados
+    await prefs.clear(); 
 
-    // Muestra un mensaje antes de redirigir
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
         content: Text('Hasta luego', textAlign: TextAlign.center),
@@ -72,12 +95,10 @@ class CustomDrawer extends StatelessWidget {
       ),
     );
 
-    // Retraso para mostrar el mensaje antes de navegar
     await Future.delayed(const Duration(seconds: 1));
 
-    // Navegar al login
     if (context.mounted) {
-      Navigator.of(context).pushNamedAndRemoveUntil('/login', (route) => false);
+      Navigator.of(context, rootNavigator: true).pushReplacementNamed('/login');
     }
   }
 }
