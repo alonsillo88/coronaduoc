@@ -243,7 +243,7 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             child: MobileScanner(
               onDetect: (barcodeCapture) {
                 final barcode = barcodeCapture.barcodes.first;
-                if (barcode.rawValue != item['ean'].toString()) {
+                if (barcode.rawValue == item['ean'].toString()) {
                   setState(() {
                     int currentConfirmed =
                         item['quantityConfirmedBackstore'] ?? 0;
