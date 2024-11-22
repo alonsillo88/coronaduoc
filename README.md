@@ -1,5 +1,5 @@
 # coronaduoc
-Proyecto informático CAPSTONE
+Proyecto informático CAPSTONE - Backstore
 
 Juan Pablo Fuentes
 Alonso González
