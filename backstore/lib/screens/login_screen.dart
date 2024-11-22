@@ -18,6 +18,7 @@ class LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
   bool _isButtonEnabled = false;
   bool _isPasswordVisible = false;
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -27,9 +28,15 @@ class LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  void _validateFields() => setState(() => _isButtonEnabled = _emailController.text.isNotEmpty && _passwordController.text.isNotEmpty);
+  void _validateFields() => setState(() {
+        _isButtonEnabled = _emailController.text.isNotEmpty && _passwordController.text.isNotEmpty;
+      });
 
   Future<void> _login() async {
+    setState(() {
+      _isLoading = true;
+    });
+
     const loginMutation = '''
       mutation login(\$loginInput: LoginInput!) {
         login(loginInput: \$loginInput) {
@@ -59,7 +66,7 @@ class LoginScreenState extends State<LoginScreen> {
         ),
       );
 
-      if (!mounted) return; // Verificar si el estado aún está montado antes de continuar
+      if (!mounted) return;
 
       if (result.hasException) {
         _showSnackBar('Error al iniciar sesión, intenta de nuevo', Colors.red);
@@ -67,9 +74,9 @@ class LoginScreenState extends State<LoginScreen> {
         final data = result.data?['login'];
         if (data != null && List<String>.from(data['roles']).contains('Picker')) {
           await _storeUserData(data);
-          if (!mounted) return; // Verificar si el estado aún está montado antes de mostrar el mensaje o navegar
+          if (!mounted) return;
           _showSnackBar('Inicio de sesión exitoso', Colors.green);
-          await Future.delayed(const Duration(seconds: 1)); // Esperar para que se vea el mensaje
+          await Future.delayed(const Duration(seconds: 1));
           _navigateToHome();
         } else {
           _showSnackBar('No tienes permisos para acceder', Colors.red);
@@ -78,6 +85,12 @@ class LoginScreenState extends State<LoginScreen> {
     } catch (e) {
       if (mounted) {
         _showSnackBar('Ocurrió un error inesperado. Intenta de nuevo', Colors.red);
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
       }
     }
   }
@@ -139,13 +152,27 @@ class LoginScreenState extends State<LoginScreen> {
         _buildPasswordField(),
         const SizedBox(height: 30),
         ElevatedButton(
-          onPressed: _isButtonEnabled ? _login : null,
+          onPressed: _isButtonEnabled && !_isLoading ? _login : null,
           style: ElevatedButton.styleFrom(
             backgroundColor: CustomColors.purple,
             padding: const EdgeInsets.symmetric(vertical: 20),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           ),
-          child: const Text('Ingresar', style: TextStyle(color: CustomColors.white)),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (_isLoading)
+                const Padding(
+                  padding: EdgeInsets.only(right: 10),
+                  child: SizedBox(
+                    height: 20,
+                    width: 20,
+                    child: CircularProgressIndicator(color: CustomColors.white, strokeWidth: 2),
+                  ),
+                ),
+              const Text('Ingresar', style: TextStyle(color: CustomColors.white)),
+            ],
+          ),
         ),
       ],
     );
