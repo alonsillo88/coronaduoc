@@ -165,7 +165,7 @@ class _HistorialScreenState extends State<HistorialScreen> {
       trailing: const Icon(Icons.keyboard_arrow_down, color: CustomColors.purple),
       children: <Widget>[
         const Text(
-          'Fecha último envío: 18/06/2023 - 14:25 hrs',
+          'Último envío',
           style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500, color: CustomColors.black),
         ),
         const SizedBox(height: 10),
