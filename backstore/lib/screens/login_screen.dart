@@ -28,9 +28,19 @@ class LoginScreenState extends State<LoginScreen> {
     }
   }
 
-  void _validateFields() => setState(() {
-        _isButtonEnabled = _emailController.text.isNotEmpty && _passwordController.text.isNotEmpty;
-      });
+  void _validateFields() {
+    setState(() {
+      _isButtonEnabled = _emailController.text.isNotEmpty &&
+          _passwordController.text.isNotEmpty;
+    });
+  }
+
+  Future<void> _clearSyncData() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('orders');
+    await prefs.remove('sentRecords');
+    await prefs.remove('quiebres');
+  }
 
   Future<void> _login() async {
     setState(() {
@@ -72,9 +82,10 @@ class LoginScreenState extends State<LoginScreen> {
         _showSnackBar('Error al iniciar sesión, intenta de nuevo', Colors.red);
       } else {
         final data = result.data?['login'];
-        if (data != null && List<String>.from(data['roles']).contains('Picker')) {
+        if (data != null &&
+            List<String>.from(data['roles']).contains('Picker')) {
+          await _clearSyncData(); // Limpia sincronizaciones previas
           await _storeUserData(data);
-          if (!mounted) return;
           _showSnackBar('Inicio de sesión exitoso', Colors.green);
           await Future.delayed(const Duration(seconds: 1));
           _navigateToHome();
@@ -83,9 +94,8 @@ class LoginScreenState extends State<LoginScreen> {
         }
       }
     } catch (e) {
-      if (mounted) {
-        _showSnackBar('Ocurrió un error inesperado. Intenta de nuevo', Colors.red);
-      }
+      _showSnackBar(
+          'Ocurrió un error inesperado. Intenta de nuevo', Colors.red);
     } finally {
       if (mounted) {
         setState(() {
@@ -107,14 +117,19 @@ class LoginScreenState extends State<LoginScreen> {
 
   void _navigateToHome() {
     if (mounted) {
-      Navigator.of(context).pushReplacement(MaterialPageRoute(builder: (context) => const HomeScreen()));
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => const HomeScreen()),
+      );
     }
   }
 
   void _showSnackBar(String message, Color color) {
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(backgroundColor: color, content: Text(message)));
-    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        backgroundColor: color,
+        content: Text(message),
+      ),
+    );
   }
 
   @override
@@ -133,7 +148,11 @@ class LoginScreenState extends State<LoginScreen> {
             const Text(
               'BACKSTORE\nMÓVIL',
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: CustomColors.purple),
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: CustomColors.purple,
+              ),
             ),
             const SizedBox(height: 80),
             _buildForm(),
@@ -156,21 +175,27 @@ class LoginScreenState extends State<LoginScreen> {
           style: ElevatedButton.styleFrom(
             backgroundColor: CustomColors.purple,
             padding: const EdgeInsets.symmetric(vertical: 20),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               if (_isLoading)
-                const Padding(
-                  padding: EdgeInsets.only(right: 10),
-                  child: SizedBox(
-                    height: 20,
-                    width: 20,
-                    child: CircularProgressIndicator(color: CustomColors.white, strokeWidth: 2),
+                const SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(
+                    valueColor: AlwaysStoppedAnimation(Colors.white),
+                    strokeWidth: 2,
                   ),
                 ),
-              const Text('Ingresar', style: TextStyle(color: CustomColors.white)),
+              if (_isLoading) const SizedBox(width: 10),
+              const Text(
+                'Ingresar',
+                style: TextStyle(color: CustomColors.white),
+              ),
             ],
           ),
         ),
@@ -178,14 +203,17 @@ class LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  TextField _buildTextField(TextEditingController controller, String label, String hint) {
+  TextField _buildTextField(
+      TextEditingController controller, String label, String hint) {
     return TextField(
       controller: controller,
       decoration: InputDecoration(
         labelText: label,
         hintText: hint,
         border: const OutlineInputBorder(),
-        focusedBorder: const OutlineInputBorder(borderSide: BorderSide(color: CustomColors.purple)),
+        focusedBorder: const OutlineInputBorder(
+          borderSide: BorderSide(color: CustomColors.purple),
+        ),
       ),
     );
   }
@@ -197,10 +225,19 @@ class LoginScreenState extends State<LoginScreen> {
       decoration: InputDecoration(
         labelText: 'Contraseña',
         border: const OutlineInputBorder(),
-        focusedBorder: const OutlineInputBorder(borderSide: BorderSide(color: CustomColors.purple)),
+        focusedBorder: const OutlineInputBorder(
+          borderSide: BorderSide(color: CustomColors.purple),
+        ),
         suffixIcon: IconButton(
-          icon: Icon(_isPasswordVisible ? Icons.visibility : Icons.visibility_off, color: CustomColors.black),
-          onPressed: () => setState(() => _isPasswordVisible = !_isPasswordVisible),
+          icon: Icon(
+            _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+            color: CustomColors.black,
+          ),
+          onPressed: () {
+            setState(() {
+              _isPasswordVisible = !_isPasswordVisible;
+            });
+          },
         ),
       ),
     );
