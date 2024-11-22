@@ -1,8 +1,8 @@
 import 'package:backstore/utils/custom_colors.dart';
 import 'package:flutter/material.dart';
-import 'package:mobile_scanner/mobile_scanner.dart'; 
+import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:intl/intl.dart';
-import 'package:shared_preferences/shared_preferences.dart'; 
+import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 
 class OrderDetailScreen extends StatefulWidget {
@@ -22,7 +22,6 @@ class OrderDetailScreen extends StatefulWidget {
 }
 
 class _OrderDetailScreenState extends State<OrderDetailScreen> {
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -109,8 +108,27 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
         child: Row(
           children: [
             item['imageUrl'] != null
-                ? Image.network(item['imageUrl'], width: 80, height: 80)
-                : Container(width: 80, height: 80, color: Colors.grey),
+                ? Image.network(
+                    item['imageUrl'],
+                    width: 80,
+                    height: 80,
+                    fit: BoxFit.cover, // Asegura que la imagen se ajuste bien
+                    errorBuilder: (context, error, stackTrace) {
+                      return Image.asset(
+                        'assets/images/default_clothing.jpg',
+                        width: 80,
+                        height: 80,
+                        fit: BoxFit
+                            .cover, // Ajusta la imagen por defecto también
+                      );
+                    },
+                  )
+                : Image.asset(
+                    'assets/images/default_clothing.jpg',
+                    width: 80,
+                    height: 80,
+                    fit: BoxFit.cover, // Ajusta la imagen por defecto
+                  ),
             const SizedBox(width: 10),
             Expanded(
               child: Column(
@@ -119,8 +137,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
                   Text(item['skuName'],
                       style: const TextStyle(fontWeight: FontWeight.bold)),
                   Text('EAN: ${item['ean']}'),
-                  Text('Color: ${item['color']}'),
-                  Text('Talla: ${item['size']}'),
+                  Text('Color: ${item['color'] ?? 'N/A'}'),
+                  Text('Talla: ${item['size'] ?? 'N/A'}'),
                   Text('Cantidad: ${item['quantity']}'),
                   Text(
                       'Confirmados: ${item['quantityConfirmedBackstore'] ?? 0}'),
@@ -130,7 +148,8 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
             IconButton(
               icon: const Icon(Icons.camera_alt),
               onPressed: () {
-                if ((item['quantityConfirmedBackstore'] ?? 0) >= item['quantity']) {
+                if ((item['quantityConfirmedBackstore'] ?? 0) >=
+                    item['quantity']) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
                       content: const Text(
@@ -156,60 +175,61 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
     );
   }
 
-void _showConfirmationModal(Map<String, dynamic> item, int index) {
-  showDialog(
-    context: context,
-    builder: (context) {
-      int confirmedQuantityTemp = item['quantityConfirmedBackstore'] ?? 0; 
-      return StatefulBuilder(
-        builder: (context, setStateModal) {
-          return AlertDialog(
-            title: const Text('Confirmar Cantidad'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Text('Selecciona la cantidad a confirmar:'),
-                DropdownButton<int>(
-                  value: confirmedQuantityTemp,
-                  onChanged: (value) {
-                    if (value != null) {
-                      setStateModal(() {
-                        confirmedQuantityTemp = value; 
-                      });
-                    }
-                  },
-                  items: List.generate(
-                    item['quantity'] + 1,
-                    (index) => DropdownMenuItem(
-                        value: index, child: Text(index.toString())),
+  void _showConfirmationModal(Map<String, dynamic> item, int index) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        int confirmedQuantityTemp = item['quantityConfirmedBackstore'] ?? 0;
+        return StatefulBuilder(
+          builder: (context, setStateModal) {
+            return AlertDialog(
+              title: const Text('Confirmar Cantidad'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Text('Selecciona la cantidad a confirmar:'),
+                  DropdownButton<int>(
+                    value: confirmedQuantityTemp,
+                    onChanged: (value) {
+                      if (value != null) {
+                        setStateModal(() {
+                          confirmedQuantityTemp = value;
+                        });
+                      }
+                    },
+                    items: List.generate(
+                      item['quantity'] + 1,
+                      (index) => DropdownMenuItem(
+                          value: index, child: Text(index.toString())),
+                    ),
                   ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  child: const Text('Cancelar'),
+                  onPressed: () {
+                    Navigator.pop(context);
+                  },
+                ),
+                TextButton(
+                  child: const Text('Guardar'),
+                  onPressed: () {
+                    setState(() {
+                      widget.order['items'][index]
+                              ['quantityConfirmedBackstore'] =
+                          confirmedQuantityTemp;
+                    });
+                    Navigator.pop(context);
+                  },
                 ),
               ],
-            ),
-            actions: [
-              TextButton(
-                child: const Text('Cancelar'),
-                onPressed: () {
-                  Navigator.pop(context); 
-                },
-              ),
-              TextButton(
-                child: const Text('Guardar'),
-                onPressed: () {
-                  setState(() {
-                    widget.order['items'][index]
-                        ['quantityConfirmedBackstore'] = confirmedQuantityTemp;
-                  });
-                  Navigator.pop(context); 
-                },
-              ),
-            ],
-          );
-        },
-      );
-    },
-  );
-}
+            );
+          },
+        );
+      },
+    );
+  }
 
   Future<void> _scanBarcode(Map<String, dynamic> item, int index) async {
     await showDialog(
@@ -230,13 +250,21 @@ void _showConfirmationModal(Map<String, dynamic> item, int index) {
                     if (currentConfirmed < item['quantity']) {
                       widget.order['items'][index]
                           ['quantityConfirmedBackstore'] = currentConfirmed + 1;
+
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Producto escaneado correctamente'),
+                          backgroundColor: Colors.green,
+                        ),
+                      );
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Cantidad máxima ya confirmada'),
+                          backgroundColor: Colors.orange,
+                        ),
+                      );
                     }
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Producto escaneado correctamente'),
-                        backgroundColor: Colors.green,
-                      ),
-                    );
                   });
                   Navigator.pop(context);
                 } else {
@@ -285,10 +313,11 @@ void _showConfirmationModal(Map<String, dynamic> item, int index) {
 
     setState(() {
       widget.order['orderBackstoreStatus'] = orderStatus;
-      widget.order['orderBackstoreStatusDate'] = DateTime.now().toIso8601String();
+      widget.order['orderBackstoreStatusDate'] =
+          DateTime.now().toIso8601String();
 
-      widget.pickingData
-          .removeWhere((order) => order['externalOrderId'] == widget.order['externalOrderId']);
+      widget.pickingData.removeWhere((order) =>
+          order['externalOrderId'] == widget.order['externalOrderId']);
       widget.completedData.add(widget.order);
     });
 
